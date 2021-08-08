@@ -1,5 +1,5 @@
 # WoW-Launcher
-A game launcher for World of Warcraft (9.0.5 and later) that allows you to connect to custom servers.
+A game launcher for World of Warcraft that allows you to connect to custom servers.
 
 [![Support](https://img.shields.io/badge/discord-join-7289DA.svg)](https://arctium.io/discord)
 
@@ -7,8 +7,12 @@ A game launcher for World of Warcraft (9.0.5 and later) that allows you to conne
 
 The WoW Launcher source is licensed under the [MIT](https://github.com/Arctium/WoW-Launcher/blob/master/LICENSE) license.
 
-## Binary Releases
+### Binary Releases
 You can find signed binary releases at [Arctium](https://arctium.io/wow)
+
+### Supported Game Versions
+* 9.0.5 or later (master)
+* 2.5.1 or later (2.5.x)
 
 ## Building
 

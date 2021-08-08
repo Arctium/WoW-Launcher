@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31521.260
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arctium.WoW.Launcher", "src\Arctium.WoW.Launcher.csproj", "{661B173A-D445-4706-9FF2-C0408ED62FA2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Debug|x64.ActiveCfg = Debug|x64
+		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Debug|x64.Build.0 = Debug|x64
+		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Release|x64.ActiveCfg = Release|x64
+		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B82A525-E7C4-4B51-9C88-3AE74C1AEC60}
+	EndGlobalSection
+EndGlobal

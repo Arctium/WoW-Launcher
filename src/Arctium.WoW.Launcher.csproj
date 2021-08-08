@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputPath>../build/$(Configuration)/bin</OutputPath>
+        <AssemblyName>Arctium WoW Launcher</AssemblyName>
+        <ApplicationIcon>logo.ico</ApplicationIcon>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>False</AppendRuntimeIdentifierToOutputPath>
+        <Nullable>disable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <AssemblyVersion>9.0.0.0</AssemblyVersion>
+        <FileVersion>9.0.0.0</FileVersion>
+        <Copyright>Arctium</Copyright>
+        <Platforms>x64</Platforms>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
+        <!-- Native AOT settings -->
+        <RootAllApplicationAssemblies>false</RootAllApplicationAssemblies>
+        <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+        <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="6.0.0-*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="IO\" />
+        <Folder Include="Constants\" />
+        <Folder Include="Misc\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <TrimmerRootAssembly Include="mscorlib" />
+        <TrimmerRootAssembly Include="System.Runtime" />
+        <TrimmerRootAssembly Include="System.Diagnostics.FileVersionInfo" />
+        <TrimmerRootAssembly Include="System.Threading.Thread" />
+    </ItemGroup>
+
+</Project>

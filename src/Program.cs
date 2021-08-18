@@ -159,10 +159,23 @@ class Program
                     memory.Write(bundleOffset, certBundleData);
 
                 Console.WriteLine("Done");
+                Console.WriteLine("Patching Signature modulus...");
+
+                // Get ConnectTo RSA modulus offset from file.
+                var modulusOffset = File.ReadAllBytes(appPath).FindPattern(Patterns.Common.SignatureModulus, memory.BaseAddress).ToNint();
+                sectionOffset = memory.Read(modulusOffset, 0x10000).FindPattern(Patterns.Common.SignatureModulus);
+
+                modulusOffset = (modulusOffset + sectionOffset).ToNint();
+
+                // Be sure that the modulus is written before the client is initialized.
+                while (memory.Read(modulusOffset, 1)?[0] != Patches.Common.SignatureModulus[0])
+                    memory.Write(modulusOffset, Patches.Common.SignatureModulus);
+
+                Console.WriteLine("Done");
                 Console.WriteLine("Patching ConnectTo modulus...");
 
                 // Get ConnectTo RSA modulus offset from file.
-                var modulusOffset = File.ReadAllBytes(appPath).FindPattern(Patterns.Common.ConnectToModulus, memory.BaseAddress).ToNint();
+                modulusOffset = File.ReadAllBytes(appPath).FindPattern(Patterns.Common.ConnectToModulus, memory.BaseAddress).ToNint();
                 sectionOffset = memory.Read(modulusOffset, 0x10000).FindPattern(Patterns.Common.ConnectToModulus);
 
                 modulusOffset = (modulusOffset + sectionOffset).ToNint();
@@ -201,7 +214,6 @@ class Program
                     memory.Write(portalOffset, Patches.Common.Portal);
 
                 Console.WriteLine("Done");
-
                 Console.WriteLine("Patching version url...");
 
                 // Version patch
@@ -254,11 +266,9 @@ class Program
 
                     // Get patch locations.
                     var certBundleOffset = binary.FindPattern(Patterns.Windows.CertBundle);
-                    var certSignatureMagicOffset = binary.FindPattern(Patterns.Windows.CertSignatureMagic);
-                    var certSignatureOffset = binary.FindPattern(Patterns.Windows.CertSignature);
                     var certCommonNameOffset = binary.FindPattern(Patterns.Windows.CertCommonName);
 
-                    if (certBundleOffset == 0 || certSignatureOffset == 0 || certCommonNameOffset == 0)
+                    if (certBundleOffset == 0 || certCommonNameOffset == 0)
                     {
                         NativeWindows.TerminateProcess(processInfo.ProcessHandle, 0);
 
@@ -266,8 +276,6 @@ class Program
 
                         Console.WriteLine("Not all patterns could be found:");
                         Console.WriteLine($"CertBundle: {certBundleOffset != 0}");
-                        Console.WriteLine($"CertSignatureMagic: {certBundleOffset != 0}");
-                        Console.WriteLine($"CertSignature: {certSignatureOffset != 0}");
                         Console.WriteLine($"CertCommonName: {certCommonNameOffset != 0}");
                         Console.WriteLine();
 
@@ -279,8 +287,6 @@ class Program
                     }
 
                     patches["CertBundle"] = (certBundleOffset, Patches.Windows.CertBundle);
-                    patches["CertSignatureMagic"] = (certSignatureMagicOffset + 6, Patches.Windows.SignatureMagic);
-                    patches["CertSignature"] = (certSignatureOffset, Patches.Windows.Signature);
                     patches["CertCommonName"] = (certCommonNameOffset + 5, Patches.Windows.CertCommonName);
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);

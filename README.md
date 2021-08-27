@@ -17,7 +17,7 @@ You can find signed binary releases at [Arctium](https://arctium.io/wow)
 ## Building
 
 ### Build Prerequisites
-* .NET Core SDK 6.0.0-preview7 or later
+* [.NET Core SDK 6.0.0-preview7 or later](https://dotnet.microsoft.com/download/dotnet/6.0)
 * Optional for native builds: C++ workload through Visual Studio 2019/2022 or latest C++ build tools
 
 ### Build Instructions Windows (native)

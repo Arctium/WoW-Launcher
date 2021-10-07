@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Arctium.
-// Licensed under the MIT license. See LICENSE file in the proje root for full license information.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using static Arctium.WoW.Launcher.Misc.NativeWindows;
 
@@ -7,24 +7,39 @@ namespace Arctium.WoW.Launcher.IO;
 
 class WinMemory
 {
-    public byte[] Data { get; private set; }
+    public byte[] Data { get; set; }
 
     public nint ProcessHandle { get; }
     public nint BaseAddress { get; }
 
     ProcessBasicInformation peb;
 
-    public WinMemory(nint processHandle)
+    public WinMemory(ProcessInformation processInformation, FileInfo fileInfo)
     {
-        ProcessHandle = processHandle;
+        ProcessHandle = processInformation.ProcessHandle;
 
-        if (processHandle == 0)
+        if (processInformation.ProcessHandle == 0)
             throw new InvalidOperationException("No valid process found.");
 
-        BaseAddress = ReadImageBaseFromPEB(processHandle);
+        BaseAddress = ReadImageBaseFromPEB(processInformation.ProcessHandle);
 
         if (BaseAddress == 0)
             throw new InvalidOperationException("Error while reading PEB data.");
+
+        Data = Read(BaseAddress, (int)fileInfo.Length);
+    }
+
+    public void RefreshMemoryData(int size)
+    {
+        // Reset previous memory data.
+        Data = Array.Empty<byte>();
+
+        while (Data?.Length == 0)
+        {
+            Console.WriteLine("Refreshing client data...");
+
+            Data = Read(BaseAddress, size);
+        }
     }
 
     public nint Read(nint address)
@@ -88,7 +103,7 @@ class WinMemory
         return (int)length;
     }
 
-    public void Write(nint address, byte[] data, MemProtection newProtection = MemProtection.ExecuteReadWrite)
+    public void Write(nint address, byte[] data, MemProtection newProtection = MemProtection.ReadWrite)
     {
         try
         {
@@ -106,7 +121,39 @@ class WinMemory
         }
     }
 
-    public void Write(long address, byte[] data, MemProtection newProtection = MemProtection.ExecuteReadWrite) => Write((nint)address, data, newProtection);
+    public void Write(long address, byte[] data, MemProtection newProtection = MemProtection.ReadWrite) => Write((nint)address, data, newProtection);
+
+    public Task PatchMemory(short[] pattern, byte[] patch, string patchName)
+    {
+        Console.WriteLine($"[{patchName}] Patching...");
+
+        long patchOffset = Data.FindPattern(pattern, BaseAddress);
+
+        // No result for the given pattern.
+        if (patchOffset == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+
+            Console.WriteLine($"[{patchName}] No result found.");
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+        }
+
+        while (Read(patchOffset, patch.Length)?.SequenceEqual(patch) == false)
+            Write(patchOffset, patch);
+
+        Console.Write($"[{patchName}]");
+
+        Console.ForegroundColor = ConsoleColor.Green;
+
+        Console.WriteLine(" Done.");
+
+        Console.ForegroundColor = ConsoleColor.Gray;
+
+        Console.WriteLine();
+
+        return Task.CompletedTask;
+    }
 
     public bool RemapAndPatch(nint viewAddress, int viewSize, Dictionary<string, (long, byte[])> patches)
     {
@@ -170,10 +217,8 @@ class WinMemory
                             // Unmap them writeable view, it's not longer needed.
                             NtUnmapViewOfSection(ProcessHandle, viewBase2);
 
-                            var mbi = new MemoryBasicInformation();
-
                             // Check if the allocation protections is the right one.
-                            if (VirtualQueryEx(ProcessHandle, BaseAddress, out mbi, mbi.Size) != 0 && mbi.AllocationProtect == MemProtection.ExecuteRead)
+                            if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0 && mbi.AllocationProtect == MemProtection.ExecuteRead)
                             {
                                 // Also check if we can change the page protection.
                                 if (!VirtualProtectEx(ProcessHandle, BaseAddress, 0x4000, (uint)MemProtection.ReadWrite, out var oldProtect))
@@ -198,9 +243,7 @@ class WinMemory
 
     public bool RemapAndPatch(Dictionary<string, (long, byte[])> patches)
     {
-        var mbi = new MemoryBasicInformation();
-
-        if (VirtualQueryEx(ProcessHandle, BaseAddress, out mbi, mbi.Size) != 0)
+        if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0)
             return RemapAndPatch(mbi.BaseAddress, (int)mbi.RegionSize, patches);
 
         return false;

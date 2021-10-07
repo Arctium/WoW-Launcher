@@ -15,6 +15,7 @@
         <FileVersion>9.0.0.0</FileVersion>
         <Copyright>Arctium</Copyright>
         <Platforms>x64</Platforms>
+        <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -30,12 +31,6 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="IO\" />
-        <Folder Include="Constants\" />
-        <Folder Include="Misc\" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,5 +1,5 @@
 // Copyright (c) Arctium.
-// Licensed under the MIT license. See LICENSE file in the proje root for full license information.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Arctium.WoW.Launcher.Patterns;
 
@@ -18,4 +18,7 @@ static class Windows
     public static short[] CertCommonName = { 0x80, 0xF9, 0x2A, 0x75, -1, 0x32, 0xC0, 0x48, 0x8B };
     public static short[] CertSignatureMagic = { 0x3B, 0x0D, -1, -1, -1, -1, 0x0F, 0x85, -1, -1, -1, -1, 0x48, 0x8D, 0x15, -1, -1, -1, -1, 0x48, 0x8D, -1, -1, -1, -1, 0x00, 0x00, 0xE8, -1, -1, -1, -1, 0x48 };
     public static short[] CertSignature = { 0x74, -1, 0x4C, 0x8B, -1, 0x08, 0x48, 0x8B, -1, 0x48, 0x8B, -1, 0x49, 0x81, -1, 0xFC };
+
+    // Registry entry used for -launcherlogin.
+    public static short[] LauncherLogin = @"Software\Blizzard Entertainment\Battle.net\Launch Options\".ToPattern();
 }

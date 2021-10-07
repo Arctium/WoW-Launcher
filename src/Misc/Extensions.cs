@@ -71,5 +71,7 @@ static class Extensions
         } while ((matchList.Count < maxMatches || match < maxOffset) && match != 0);
 
         return matchList;
-    }
+}
+
+    public static short[] ToPattern(this string data) => Encoding.UTF8.GetBytes(data).Select(b => (short)b).ToArray();
 }

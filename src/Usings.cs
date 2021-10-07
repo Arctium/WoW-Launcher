@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Arctium.
-// Licensed under the MIT license. See LICENSE file in the proje root for full license information.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 global using Arctium.WoW.Launcher.Constants;
 global using Arctium.WoW.Launcher.IO;

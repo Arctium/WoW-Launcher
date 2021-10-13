@@ -11,14 +11,13 @@ The WoW Launcher source is licensed under the [MIT](https://github.com/Arctium/W
 You can find signed binary releases at [Arctium](https://arctium.io/wow)
 
 ### Supported Game Versions
-* 9.0.5 or later (master)
-* 2.5.1 or later (2.5.x)
+* 9.0.5 or later (windows)
 
 ## Building
 
 ### Build Prerequisites
-* [.NET Core SDK 6.0.0-rc.1 or later](https://dotnet.microsoft.com/download/dotnet/6.0)
-* Optional for native builds: C++ workload through Visual Studio 2019/2022 or latest C++ build tools
+* [.NET Core SDK 6.0.0-rc.2 or later](https://dotnet.microsoft.com/download/dotnet/6.0)
+* Optional for native builds: C++ workload through Visual Studio 2022 or latest C++ build tools
 
 ### Build Instructions Windows (native)
 * Execute `dotnet publish -r win-x64 /p:Configuration=Release /p:platform="x64" --self-contained`
@@ -30,9 +29,7 @@ You can find signed binary releases at [Arctium](https://arctium.io/wow)
 3. Run the `Actium WoW Launcher.exe`
 
 ### Parameters
-* `--path "Your WoW Path"` to specify your custom wow path.
-* `--binary "Your WoW Binary"` to specify your custom wow binary name.
-* `-keepcache` to skip deleting the Cache folder on launch..
+* Use --help
 
 
 ## WARNING

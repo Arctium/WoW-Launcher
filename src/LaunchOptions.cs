@@ -5,35 +5,33 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 
-using Command = System.CommandLine.Command;
+namespace Arctium.WoW.Launcher.Misc;
 
-namespace Arctium.WoW.Launcher.Misc
+static class LaunchOptions
 {
-    static class LaunchOptions
+    public static Option<GameVersion> Version = new("--version", () => GameVersion.Retail);
+    public static Option<string> GamePath = new("--path", () => AppDomain.CurrentDomain.BaseDirectory);
+    public static Option<bool> KeepCache = new("--keepcache", () => true);
+
+    public static Parser Instance => new CommandLineBuilder(ConfigureCommandLine(RootCommand))
+        .UseHelp()
+        .UseParseDirective()
+        .UseSuggestDirective()
+        .Build();
+
+    public static RootCommand RootCommand = new("Arctium\0WoW\0Launcher")
     {
-        public static Option<GameVersion> Version = new("--version", () => GameVersion.Retail);
-        public static Option<string> GamePath = new("--path", () => AppDomain.CurrentDomain.BaseDirectory);
-        public static Option<bool> KeepCache = new("--keepcache", () => true);
+        Version,
+        GamePath,
+        KeepCache
+    };
 
-        public static Parser Instance => new CommandLineBuilder(ConfigureCommandLine(RootCommand))
-            .UseHelp()
-            .UseParseDirective()
-            .UseSuggestDirective()
-            .Build();
+    static Command ConfigureCommandLine(Command rootCommand)
+    {
+        // Do not show errors for unknown command line parameters.
+        rootCommand.TreatUnmatchedTokensAsErrors = true;
 
-        public static RootCommand RootCommand = new("Arctium\0WoW\0Launcher")
-        {
-            Version,
-            GamePath,
-            KeepCache
-        };
-
-        static Command ConfigureCommandLine(Command rootCommand)
-        {
-            // Do not show errors for unknown command line parameters.
-            rootCommand.TreatUnmatchedTokensAsErrors = true;
-
-            return rootCommand;
-        }
+        return rootCommand;
     }
 }
+

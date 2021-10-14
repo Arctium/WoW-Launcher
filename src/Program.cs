@@ -17,7 +17,6 @@ class Program
         LaunchOptions.RootCommand.Handler = CommandHandler.Create((ParseResult parseResult) =>
         {
             var appPath = Launcher.PrepareGameLaunch(parseResult);
-
             var gameCommandLine = string.Join(" ", parseResult.UnmatchedTokens);
 
             if (string.IsNullOrEmpty(appPath) || !Launcher.LaunchGame(appPath, gameCommandLine))

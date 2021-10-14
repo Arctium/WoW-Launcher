@@ -48,13 +48,7 @@ static class Helpers
         Console.WriteLine("{0,30}", "https://arctium.io");
 
         Console.WriteLine();
-        Console.WriteLine($"Platform: {Environment.OSVersion.Platform}");
-        Console.WriteLine($"Runtime: {Environment.Version}");
-
-        Console.ForegroundColor = ConsoleColor.Yellow;
-
-        Console.WriteLine($"Mode: Custom Server (Retail)");
-        Console.WriteLine();
+        Console.WriteLine($"Operating System: {RuntimeInformation.OSDescription}");
     }
 
     public static bool IsFileClosed(string filename)

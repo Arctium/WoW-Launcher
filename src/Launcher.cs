@@ -14,10 +14,16 @@ class Launcher
         var (SubFolder, BinaryName, MajorGameVersion, MinGameBuild) = gameVersion switch
         {
             GameVersion.Retail => ("_retail_", "Wow.exe", 9, 37862),
-            //GameVersion.Classic => ("_classic_", "WowClassic.exe", 2, 39926),
-            //GameVersion.ClassicEra => ("_classic_era_", "WowClassic.exe", 1, 40347),
+            GameVersion.Classic => ("_classic_", "WowClassic.exe", 2, 39926),
+            GameVersion.ClassicEra => ("_classic_era_", "WowClassic.exe", 1, 40347),
             _ => throw new NotImplementedException("Invalid game version specified."),
         };
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+
+        Console.WriteLine($"Mode: Custom Server ({gameVersion})");
+        Console.WriteLine();
+        Console.ResetColor();
 
         var currentFolder = commandLineResult.ValueForOption(LaunchOptions.GamePath);
         var gameFolder = $"{currentFolder}/{SubFolder}";
@@ -153,6 +159,8 @@ class Launcher
 
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("You can login now.");
+
+                        Console.ResetColor();
 
                         return true;
                     }

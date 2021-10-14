@@ -10,8 +10,10 @@ The WoW Launcher source is licensed under the [MIT](https://github.com/Arctium/W
 ### Binary Releases
 You can find signed binary releases at [Arctium](https://arctium.io/wow)
 
-### Supported Game Versions
-* 9.0.5 or later (windows)
+### Supported Game Versions (Windows)
+* Retail: 9.1.0 (default)
+* Classic: 2.5.2 (--version Classic)
+* Classic Era: 1.14.0 (--version ClassicEra)
 
 ## Building
 
@@ -30,7 +32,6 @@ You can find signed binary releases at [Arctium](https://arctium.io/wow)
 
 ### Parameters
 * Use --help
-
 
 ## WARNING
 

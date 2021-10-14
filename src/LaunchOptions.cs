@@ -16,6 +16,8 @@ static class LaunchOptions
     public static Parser Instance => new CommandLineBuilder(ConfigureCommandLine(RootCommand))
         .UseHelp()
         .UseParseDirective()
+        .CancelOnProcessTermination()
+        .UseParseErrorReporting()
         .UseSuggestDirective()
         .Build();
 
@@ -29,7 +31,7 @@ static class LaunchOptions
     static Command ConfigureCommandLine(Command rootCommand)
     {
         // Do not show errors for unknown command line parameters.
-        rootCommand.TreatUnmatchedTokensAsErrors = true;
+        rootCommand.TreatUnmatchedTokensAsErrors = false;
 
         return rootCommand;
     }

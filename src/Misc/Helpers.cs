@@ -48,7 +48,7 @@ static class Helpers
         Console.WriteLine("{0,30}", "https://arctium.io");
 
         Console.WriteLine();
-        Console.WriteLine($"Operating System: {RuntimeInformation.OSDescription}");
+        Console.WriteLine(string.Format(Globalization.GetString("OPERATING_SYSTEM"), RuntimeInformation.OSDescription));
     }
 
     public static bool IsFileClosed(string filename)

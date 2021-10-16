@@ -36,7 +36,7 @@ class WinMemory
 
         while (Data?.Length == 0)
         {
-            Console.WriteLine("Refreshing client data...");
+            Console.WriteLine(Globalization.GetString("REFRESH_CLIENT_DATA"));
 
             Data = Read(BaseAddress, size);
         }
@@ -125,7 +125,7 @@ class WinMemory
 
     public Task PatchMemory(short[] pattern, byte[] patch, string patchName)
     {
-        Console.WriteLine($"[{patchName}] Patching...");
+        Console.WriteLine(string.Format(Globalization.GetString("PATCHING"), patchName));
 
         long patchOffset = Data.FindPattern(pattern, BaseAddress);
 
@@ -134,8 +134,8 @@ class WinMemory
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            Console.WriteLine($"[{patchName}] No result found.");
-            Console.WriteLine("Press any key to continue...");
+            Console.WriteLine(string.Format(Globalization.GetString("PATCHING_NO_RESULT"), patchName));
+            Console.WriteLine(Globalization.GetString("PRESS_ANY_KEY"));
             Console.ReadKey();
         }
 
@@ -146,7 +146,7 @@ class WinMemory
 
         Console.ForegroundColor = ConsoleColor.Green;
 
-        Console.WriteLine(" Done.");
+        Console.WriteLine(Globalization.GetString("DONE_2"));
 
         Console.ForegroundColor = ConsoleColor.Gray;
 
@@ -230,11 +230,11 @@ class WinMemory
                     }
                 }
 
-                Console.WriteLine("Error while mapping the view with the given protection.");
+                Console.WriteLine(Globalization.GetString("ERROR_MAPPING_PROTECTION"));
             }
         }
         else
-            Console.WriteLine("Error while creating the view backup.");
+            Console.WriteLine(Globalization.GetString("ERROR_VIEW_BACKUP"));
 
         NtResumeProcess(ProcessHandle);
 

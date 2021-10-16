@@ -29,7 +29,7 @@ class Program
     public static void WaitAndExit(int ms = 2000)
     {
         Console.ForegroundColor = ConsoleColor.Gray;
-        Console.WriteLine($"Closing in {ms / 1000} seconds...");
+        Console.WriteLine(string.Format(Globalization.GetString("WAIT_AND_EXIT"), ms / 1000));
 
         Thread.Sleep(ms);
 

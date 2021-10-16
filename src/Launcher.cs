@@ -21,7 +21,7 @@ class Launcher
 
         Console.ForegroundColor = ConsoleColor.Yellow;
 
-        Console.WriteLine($"Mode: Custom Server ({gameVersion})");
+        Console.WriteLine(string.Format(Globalization.GetString("MODE"), gameVersion));
         Console.WriteLine();
         Console.ResetColor();
 
@@ -39,7 +39,7 @@ class Launcher
         if (!File.Exists(gameBinaryPath) || GetVersionValueFromClient(gameBinaryPath, 3) != MajorGameVersion)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"[Error] No {gameVersion} client found.");
+            Console.WriteLine(string.Format(Globalization.GetString("ERROR_NO_CLIENT_FOUND"), gameVersion));
 
             return String.Empty;
         }
@@ -49,8 +49,8 @@ class Launcher
         if (gameClientBuild < MinGameBuild && gameClientBuild != 0)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Your found client version {gameClientBuild} is not supported.");
-            Console.WriteLine($"The minimum required build is {MinGameBuild}");
+            Console.WriteLine(string.Format(Globalization.GetString("ERROR_FOUND_NOT_SUPPORTED"), gameClientBuild));
+            Console.WriteLine(string.Format(Globalization.GetString("ERROR_MINIMUM_SUPPORTED"), MinGameBuild));
 
             return String.Empty;
         }
@@ -80,7 +80,7 @@ class Launcher
         try
         {
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("Starting WoW client...");
+            Console.WriteLine(Globalization.GetString("STARTING_WOW_CLIENT"));
 
             var createSuccess = NativeWindows.CreateProcess(null, $"{appPath} {gameCommandLine}", 0, 0, false, 4U, 0, new FileInfo(appPath)?.DirectoryName, ref startupInfo, out processInfo);
 
@@ -101,13 +101,13 @@ class Launcher
                 byte[] versionPatch = Patches.Common.GetVersionUrl(wowBuild);
 
                 // Wait for all direct memory patch tasks to complete,
-                Task.WaitAll(memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
-                             memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature Modulus"),
-                             memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.Modulus, "ConnectTo Modulus"),
-                             memory.PatchMemory(Patterns.Common.ChangeProtocolModulus, Patches.Common.Modulus, "ChangeProtocol (GameCrypt) Modulus"),
-                             memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
-                             memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
-                             memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry"));
+                Task.WaitAll(memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, Globalization.GetString("CERTIFICATE_BUNDLE")),
+                             memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, Globalization.GetString("CERTIFICATE_SIGNATURE_MODULUS")),
+                             memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.Modulus, Globalization.GetString("CONNECTTO_MODULUS")),
+                             memory.PatchMemory(Patterns.Common.ChangeProtocolModulus, Patches.Common.Modulus, Globalization.GetString("CHANGEPROTOCOL_MODULUS")),
+                             memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, Globalization.GetString("LOGIN_PORTAL")),
+                             memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, Globalization.GetString("VERSION_URL")),
+                             memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, Globalization.GetString("LAUNCHER_LOGIN_REGISTRY")));
 
                 // Resume the process to initialize it.
                 NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
@@ -136,7 +136,7 @@ class Launcher
 
                         Console.ForegroundColor = ConsoleColor.Red;
 
-                        Console.WriteLine("Not all patterns could be found:");
+                        Console.WriteLine(Globalization.GetString("NOT_ALL_PATERNS_FOUND"));
                         Console.WriteLine($"CertBundle: {certBundleOffset != 0}");
                         Console.WriteLine($"CertCommonName: {certCommonNameOffset != 0}");
                         Console.WriteLine();
@@ -155,10 +155,10 @@ class Launcher
 
                     if (memory.RemapAndPatch(patches))
                     {
-                        Console.WriteLine("Done :) ");
+                        Console.WriteLine(Globalization.GetString("DONE"));
 
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("You can login now.");
+                        Console.WriteLine(Globalization.GetString("CAN_LOGIN"));
 
                         Console.ResetColor();
 
@@ -167,7 +167,7 @@ class Launcher
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Error while launching the client.");
+                        Console.WriteLine(Globalization.GetString("ERROR_WHILE_LAUNCHING_CLIENT"));
 
                         NativeWindows.TerminateProcess(processInfo.ProcessHandle, 0);
                     }
@@ -195,7 +195,7 @@ class Launcher
         {
             initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
 
-            Console.WriteLine("Waiting for client initialization...");
+            Console.WriteLine(Globalization.GetString("WAITING_FOR_CLIENT_INIT"));
         }
 
         initOffset += BitConverter.ToUInt32(memory.Read(initOffset + memory.BaseAddress + 2, 4), 0) + 10;

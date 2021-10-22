@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Arctium.WoW.Launcher": {
-      "commandName": "Project",
-      "commandLineArgs": "--path \"D:\\Jeux\\Battle.net\\World of Warcraft\\_retail_\""
-    }
-  }
-}

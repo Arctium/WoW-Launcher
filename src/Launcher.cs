@@ -3,6 +3,7 @@
 
 using static Arctium.WoW.Launcher.Misc.Helpers;
 using System.CommandLine.Parsing;
+using System.Reflection.PortableExecutable;
 
 namespace Arctium.WoW.Launcher;
 
@@ -25,13 +26,18 @@ class Launcher
         Console.WriteLine();
         Console.ResetColor();
 
-        var currentFolder = commandLineResult.ValueForOption(LaunchOptions.GamePath);
+        var currentFolder = AppDomain.CurrentDomain.BaseDirectory;
         var gameFolder = $"{currentFolder}/{SubFolder}";
         var gameBinaryPath = $"{gameFolder}/{BinaryName}";
 
-        // Also support game installations without branch sub folders.
-        if (commandLineResult.HasOption(LaunchOptions.GamePath) || !File.Exists(gameBinaryPath))
+        if (commandLineResult.HasOption(LaunchOptions.GamePath))
         {
+            gameFolder = commandLineResult.ValueForOption(LaunchOptions.GamePath);
+            gameBinaryPath = $"{gameFolder}/{BinaryName}";
+        }
+        else if (!File.Exists(gameBinaryPath))
+        {
+            // Also support game installations without branch sub folders.
             gameFolder = currentFolder;
             gameBinaryPath = $"{gameFolder}/{BinaryName}";
         }
@@ -91,23 +97,9 @@ class Launcher
             // Start process with suspend flags.
             if (createSuccess)
             {
-                var appFileInfo = new FileInfo(appPath);
-                var memory = new WinMemory(processInfo, appFileInfo);
+                using var gameAppData = new MemoryStream(File.ReadAllBytes(appPath));
 
-                byte[] certBundleData = Convert.FromBase64String(Patches.Common.CertBundleData);
-
-                // Build the version URL from the game binary build.
-                int wowBuild = GetVersionValueFromClient(appPath, 0);
-                byte[] versionPatch = Patches.Common.GetVersionUrl(wowBuild);
-
-                // Wait for all direct memory patch tasks to complete,
-                Task.WaitAll(memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
-                             memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature Modulus"),
-                             memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.Modulus, "ConnectTo Modulus"),
-                             memory.PatchMemory(Patterns.Common.ChangeProtocolModulus, Patches.Common.Modulus, "ChangeProtocol (GameCrypt) Modulus"),
-                             memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
-                             memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
-                             memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry"));
+                var memory = new WinMemory(processInfo, gameAppData.Length);
 
                 // Resume the process to initialize it.
                 NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
@@ -120,7 +112,44 @@ class Launcher
 
                 if (mbi.BaseAddress != 0)
                 {
+                    NativeWindows.NtSuspendProcess(processInfo.ProcessHandle);
+
+                    byte[] certBundleData = Convert.FromBase64String(Patches.Common.CertBundleData);
+
+                    // Build the version URL from the game binary build.
+                    int wowBuild = GetVersionValueFromClient(appPath, 0);
+                    byte[] versionPatch = Patches.Common.GetVersionUrl(wowBuild);
+
+                    // Refresh the client data before patching.
+                    memory.RefreshMemoryData((int)gameAppData.Length);
+
+                    // Wait for all direct memory patch tasks to complete,
+                    Task.WaitAll(memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
+                                 memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature Modulus"),
+                                 memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.Modulus, "ConnectTo Modulus"),
+                                 memory.PatchMemory(Patterns.Common.ChangeProtocolModulus, Patches.Common.Modulus, "ChangeProtocol (GameCrypt) Modulus"),
+                                 memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
+                                 memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
+                                 memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry"));
+
+                    NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
+
                     var patches = new Dictionary<string, (long Address, byte[] Data)>();
+
+                    // Get PE header info for client initialization.
+                    var peHeaders = new PEHeaders(gameAppData);
+
+                    SectionHeader textSectionHeader = peHeaders.SectionHeaders.Single(sectionHeader => sectionHeader.Name.ToLower() == ".text");
+
+                    gameAppData.Position = textSectionHeader.VirtualSize + textSectionHeader.PointerToRawData;
+
+                    var textSectionEndValue = (byte)gameAppData.ReadByte();
+
+                    Console.WriteLine("Waiting for client initialization...");
+
+                    var virtualTextSectionEnd = memory.BaseAddress + textSectionHeader.VirtualAddress + textSectionHeader.VirtualSize;
+
+                    while (memory?.Read(virtualTextSectionEnd, 1)?[0] == null || memory?.Read(virtualTextSectionEnd, 1)?[0] == textSectionEndValue);
 
                     PrepareAntiCrash(memory, patches, ref mbi, ref processInfo);
 
@@ -188,22 +217,6 @@ class Launcher
 
     static void PrepareAntiCrash(WinMemory memory, Dictionary<string, (long, byte[])> patches, ref MemoryBasicInformation mbi, ref ProcessInformation processInfo)
     {
-        // Wait for client initialization.
-        var initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
-
-        while (initOffset == 0)
-        {
-            initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
-
-            Console.WriteLine("Waiting for client initialization...");
-        }
-
-        initOffset += BitConverter.ToUInt32(memory.Read(initOffset + memory.BaseAddress + 2, 4), 0) + 10;
-
-        while (memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == null ||
-               memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == 0)
-            memory.Data = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize);
-
         memory.RefreshMemoryData((int)mbi.RegionSize);
 
         // Suspend the process and handle the patches.

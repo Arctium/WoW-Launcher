@@ -14,7 +14,7 @@ class WinMemory
 
     ProcessBasicInformation peb;
 
-    public WinMemory(ProcessInformation processInformation, FileInfo fileInfo)
+    public WinMemory(ProcessInformation processInformation, long binaryLength)
     {
         ProcessHandle = processInformation.ProcessHandle;
 
@@ -26,15 +26,15 @@ class WinMemory
         if (BaseAddress == 0)
             throw new InvalidOperationException("Error while reading PEB data.");
 
-        Data = Read(BaseAddress, (int)fileInfo.Length);
+        Data = Read(BaseAddress, (int)binaryLength);
     }
 
     public void RefreshMemoryData(int size)
     {
         // Reset previous memory data.
-        Data = Array.Empty<byte>();
+        Data = null;
 
-        while (Data?.Length == 0)
+        while (Data == null)
         {
             Console.WriteLine("Refreshing client data...");
 

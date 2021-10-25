@@ -149,7 +149,8 @@ class Launcher
 
                     var virtualTextSectionEnd = memory.BaseAddress + textSectionHeader.VirtualAddress + textSectionHeader.VirtualSize;
 
-                    while (memory?.Read(virtualTextSectionEnd, 1)?[0] == null || memory?.Read(virtualTextSectionEnd, 1)?[0] == textSectionEndValue);
+                    while (memory?.Read(virtualTextSectionEnd, 1)?[0] == null || memory?.Read(virtualTextSectionEnd, 1)?[0] == textSectionEndValue)
+                        Thread.Sleep(100);
 
                     PrepareAntiCrash(memory, patches, ref mbi, ref processInfo);
 

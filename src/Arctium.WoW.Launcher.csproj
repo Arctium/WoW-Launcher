@@ -14,7 +14,7 @@
         <AssemblyVersion>9.0.0.0</AssemblyVersion>
         <FileVersion>9.0.0.0</FileVersion>
         <Copyright>Arctium</Copyright>
-        <Platforms>x64</Platforms>
+        <Platforms>x64;ARM64</Platforms>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
@@ -29,8 +29,20 @@
         <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <RuntimeIdentifier>win-arm64</RuntimeIdentifier>
+
+        <!-- Native AOT settings -->
+        <RootAllApplicationAssemblies>false</RootAllApplicationAssemblies>
+        <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+        <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+        <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
         <PackageReference Include="System.CommandLine" Version="2.0.0-*" />
     </ItemGroup>
 

@@ -28,6 +28,10 @@ class Launcher
 
         var currentFolder = AppDomain.CurrentDomain.BaseDirectory;
         var gameFolder = $"{currentFolder}/{SubFolder}";
+
+        if (commandLineResult.HasOption(LaunchOptions.GameBinary))
+            BinaryName = commandLineResult.ValueForOption(LaunchOptions.GameBinary);
+
         var gameBinaryPath = $"{gameFolder}/{BinaryName}";
 
         if (commandLineResult.HasOption(LaunchOptions.GamePath))

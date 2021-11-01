@@ -228,6 +228,11 @@ class Launcher
 
             NativeWindows.TerminateProcess(processInfo.ProcessHandle, 0);
         }
+        finally
+        {
+            NativeWindows.CloseHandle(processInfo.ProcessHandle);
+            NativeWindows.CloseHandle(processInfo.ThreadHandle);
+        }
 
         return false;
     }

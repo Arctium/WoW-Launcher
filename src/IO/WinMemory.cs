@@ -167,70 +167,76 @@ class WinMemory
             nint newViewHandle = 0;
             var maxSize = new LargeInteger { Quad = viewSize };
 
-            if (NtCreateSection(ref newViewHandle, 0xF001F, 0, ref maxSize, 0x40u, 0x8000000, 0) == NtStatus.Success &&
-                NtUnmapViewOfSection(ProcessHandle, viewAddress) == NtStatus.Success)
+            try
             {
-                var viewBase = viewAddress;
-
-                // Map the view with original protections.
-                var result = NtMapViewOfSection(newViewHandle, ProcessHandle, ref viewBase, 0, (ulong)viewSize, out var viewOffset,
-                                       out var newViewSize, 2, 0, (int)MemProtection.ExecuteRead);
-
-                if (result == NtStatus.Success)
+                if (NtCreateSection(ref newViewHandle, 0xF001F, 0, ref maxSize, 0x40u, 0x8000000 | 0x400000, 0) == NtStatus.Success &&
+                    NtUnmapViewOfSection(ProcessHandle, viewAddress) == NtStatus.Success)
                 {
-                    // Apply our patches.
-                    foreach (var p in patches)
-                    {
-                        var address = p.Value.Item1;
+                    var viewBase = viewAddress;
 
-                        if (address == 0)
-                            continue;
-
-                        var patch = p.Value.Item2;
-
-                        // We are in a different section here.
-                        if (address > Data.Length)
-                        {
-                            if (address < BaseAddress)
-                                address += BaseAddress;
-
-                            Write(address, patch, MemProtection.ReadWrite);
-                            continue;
-                        }
-
-                        for (var i = 0; i < patch.Length; i++)
-                            Data[address + i] = patch[i];
-                    }
-
-                    nint viewBase2 = 0;
-
-                    // Create a writable view to write our patches through to preserve the original protections.
-                    result = NtMapViewOfSection(newViewHandle, ProcessHandle, ref viewBase2, 0, (uint)viewSize, out var viewOffset2,
-                                           out var newViewSize2, 2, 0, (int)MemProtection.ReadWrite);
-
+                    // Map the view with original protections.
+                    var result = NtMapViewOfSection(newViewHandle, ProcessHandle, ref viewBase, 0, (ulong)viewSize, out var viewOffset,
+                                           out var newViewSize, 2, 0, (int)MemProtection.ExecuteRead);
 
                     if (result == NtStatus.Success)
                     {
-                        // Write our patched data trough the writable view to the memory.
-                        if (WriteProcessMemory(ProcessHandle, viewBase2, Data, viewSize, out var dummy))
+                        // Apply our patches.
+                        foreach (var p in patches)
                         {
-                            // Unmap them writeable view, it's not longer needed.
-                            NtUnmapViewOfSection(ProcessHandle, viewBase2);
+                            var address = p.Value.Item1;
 
-                            // Check if the allocation protections is the right one.
-                            if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0 && mbi.AllocationProtect == MemProtection.ExecuteRead)
+                            if (address == 0)
+                                continue;
+
+                            var patch = p.Value.Item2;
+
+                            // We are in a different section here.
+                            if (address > Data.Length)
                             {
-                                // Also check if we can change the page protection.
-                                if (!VirtualProtectEx(ProcessHandle, BaseAddress, 0x4000, (uint)MemProtection.ReadWrite, out var oldProtect))
-                                    NtResumeProcess(ProcessHandle);
+                                if (address < BaseAddress)
+                                    address += BaseAddress;
 
-                                return true;
+                                Write(address, patch, MemProtection.ReadWrite);
+                                continue;
+                            }
+
+                            for (var i = 0; i < patch.Length; i++)
+                                Data[address + i] = patch[i];
+                        }
+
+                        nint viewBase2 = 0;
+
+                        // Create a writable view to write our patches through to preserve the original protections.
+                        result = NtMapViewOfSection(newViewHandle, ProcessHandle, ref viewBase2, 0, (uint)viewSize, out var viewOffset2,
+                                               out var newViewSize2, 2, 0, (int)MemProtection.ReadWrite);
+
+                        if (result == NtStatus.Success)
+                        {
+                            // Write our patched data trough the writable view to the memory.
+                            if (WriteProcessMemory(ProcessHandle, viewBase2, Data, viewSize, out var dummy))
+                            {
+                                // Unmap them writeable view, it's not longer needed.
+                                NtUnmapViewOfSection(ProcessHandle, viewBase2);
+
+                                // Check if the allocation protections is the right one.
+                                if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0 && mbi.AllocationProtect == MemProtection.ExecuteRead)
+                                {
+                                    // Also check if we can change the page protection.
+                                    if (!VirtualProtectEx(ProcessHandle, BaseAddress, 0x4000, (uint)MemProtection.ReadWrite, out var oldProtect))
+                                        NtResumeProcess(ProcessHandle);
+
+                                    return true;
+                                }
                             }
                         }
                     }
-                }
 
-                Console.WriteLine("Error while mapping the view with the given protection.");
+                    Console.WriteLine("Error while mapping the view with the given protection.");
+                }
+            }
+            finally
+            {
+                NtClose(newViewHandle);
             }
         }
         else

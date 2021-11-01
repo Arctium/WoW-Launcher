@@ -13,6 +13,9 @@ static class NativeWindows
     [DllImport("kernel32.dll", EntryPoint = "TerminateProcess")]
     public static extern void TerminateProcess(nint processHandle, int exitCode);
 
+    [DllImport("kernel32.dll", EntryPoint = "CloseHandle")]
+    public static extern void CloseHandle(nint handle);
+
     // Memory
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern int VirtualQueryEx(nint hProcess, nint lpBaseAddress, out MemoryBasicInformation mbi, int dwSize);
@@ -52,4 +55,7 @@ static class NativeWindows
 
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern nint NtSuspendProcess(nint ProcessHandle);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern nint NtClose(nint handle);
 }

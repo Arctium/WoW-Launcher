@@ -16,6 +16,7 @@
         <Copyright>Arctium</Copyright>
         <Platforms>x64;ARM64</Platforms>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DefineConstants>$(DefineConstants);$(Platform)</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -14,10 +14,17 @@ class Launcher
         var gameVersion = commandLineResult.ValueForOption(LaunchOptions.Version);
         var (SubFolder, BinaryName, MajorGameVersion, MinGameBuild) = gameVersion switch
         {
+#if x64
             GameVersion.Retail => ("_retail_", "Wow.exe", 9, 37862),
             GameVersion.Classic => ("_classic_", "WowClassic.exe", 2, 39926),
             GameVersion.ClassicEra => ("_classic_era_", "WowClassic.exe", 1, 40347),
+#elif ARM64
+            GameVersion.Retail => ("_retail_", "Wow-ARM64.exe", 9, 37862),
+            GameVersion.Classic => ("_classic_", "WowClassic-arm64.exe", 2, 39926),
+            GameVersion.ClassicEra => ("_classic_era_", "WowClassic-arm64.exe", 1, 40347),
+#endif
             _ => throw new NotImplementedException("Invalid game version specified."),
+
         };
 
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -182,8 +189,13 @@ class Launcher
                         return false;
                     }
 
+#if x64
                     patches["CertBundle"] = (certBundleOffset, Patches.Windows.CertBundle);
                     patches["CertCommonName"] = (certCommonNameOffset + 5, Patches.Windows.CertCommonName);
+#elif ARM64
+                    patches["CertBundle"] = (certBundleOffset + 19, Patches.Windows.Branch);
+                    patches["CertCommonName"] = (certCommonNameOffset + 6, Patches.Windows.CertCommonName);
+#endif
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 

@@ -27,7 +27,8 @@ You can find signed binary releases at [Arctium](https://arctium.io/wow)
 * Optional for native builds: C++ workload through Visual Studio 2022 or latest C++ build tools
 
 ### Build Instructions Windows (native)
-* Execute `dotnet publish -r win-x64 /p:Configuration=Release /p:platform="x64" --self-contained`
+* Available runtime identifiers/platforms: win-x64/x64, win-arm64/ARM64
+* Execute `dotnet publish -r RuntimeIdentifier /p:Configuration=Release /p:platform="Platform" --self-contained`
 * Native output is placed in `build\Release\bin\native`
 
 ### Usage Windows

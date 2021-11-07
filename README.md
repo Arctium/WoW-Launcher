@@ -11,7 +11,7 @@ The WoW Launcher source is licensed under the [MIT](https://github.com/Arctium/W
 You can find signed binary releases at [Arctium](https://arctium.io/wow)
 
 ### Supported Game Versions (Windows x86 64 bit)
-* Retail: 9.1.0 (default)
+* Retail: 9.1.0, 9.1.5 (default)
 * Classic: 2.5.2 (--version Classic)
 * Classic Era: 1.14.0 (--version ClassicEra)
 

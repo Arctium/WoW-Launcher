@@ -3,7 +3,6 @@
 
 using static Arctium.WoW.Launcher.Misc.Helpers;
 using System.CommandLine.Parsing;
-using System.Reflection.PortableExecutable;
 
 namespace Arctium.WoW.Launcher;
 
@@ -145,23 +144,23 @@ class Launcher
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
+                    // Wait for client initialization.
+                    var initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
+
+                    while (initOffset == 0)
+                    {
+                        initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
+
+                        Console.WriteLine("Waiting for client initialization...");
+                    }
+
+                    initOffset += BitConverter.ToUInt32(memory.Read(initOffset + memory.BaseAddress + 2, 4), 0) + 10;
+
+                    while (memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == null ||
+                           memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == 0)
+                        memory.Data = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize);
+
                     var patches = new Dictionary<string, (long Address, byte[] Data)>();
-
-                    // Get PE header info for client initialization.
-                    var peHeaders = new PEHeaders(gameAppData);
-
-                    SectionHeader textSectionHeader = peHeaders.SectionHeaders.Single(sectionHeader => sectionHeader.Name.ToLower() == ".text");
-
-                    gameAppData.Position = textSectionHeader.VirtualSize + textSectionHeader.PointerToRawData;
-
-                    var textSectionEndValue = (byte)gameAppData.ReadByte();
-
-                    Console.WriteLine("Waiting for client initialization...");
-
-                    var virtualTextSectionEnd = memory.BaseAddress + textSectionHeader.VirtualAddress + textSectionHeader.VirtualSize;
-
-                    while (memory?.Read(virtualTextSectionEnd, 1)?[0] == null || memory?.Read(virtualTextSectionEnd, 1)?[0] == textSectionEndValue)
-                        Thread.Sleep(100);
 
                     PrepareAntiCrash(memory, patches, ref mbi, ref processInfo);
 

@@ -223,10 +223,8 @@ class Launcher
         catch (Exception ex)
         {
             // Just print out the exception we have and kill the game process.
-#if DEBUG
             Console.WriteLine(ex);
             Console.WriteLine(ex.StackTrace);
-#endif
 
             NativeWindows.TerminateProcess(processInfo.ProcessHandle, 0);
         }

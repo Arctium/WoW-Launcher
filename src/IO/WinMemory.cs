@@ -14,6 +14,8 @@ class WinMemory
 
     ProcessBasicInformation peb;
 
+    readonly Dictionary<string, (long Address, byte[] Data)> patchList;
+
     public WinMemory(ProcessInformation processInformation, long binaryLength)
     {
         ProcessHandle = processInformation.ProcessHandle;
@@ -27,6 +29,8 @@ class WinMemory
             throw new InvalidOperationException("Error while reading PEB data.");
 
         Data = Read(BaseAddress, (int)binaryLength);
+
+        patchList = new();
     }
 
     public void RefreshMemoryData(int size)
@@ -135,8 +139,10 @@ class WinMemory
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             Console.WriteLine($"[{patchName}] No result found.");
-            Console.WriteLine("Press any key to continue...");
+            Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
+
+            Program.CancellationTokenSource.Cancel();
         }
 
         while (Read(patchOffset, patch.Length)?.SequenceEqual(patch) == false)
@@ -155,7 +161,52 @@ class WinMemory
         return Task.CompletedTask;
     }
 
-    public bool RemapAndPatch(nint viewAddress, int viewSize, Dictionary<string, (long, byte[])> patches)
+    public Task QueuePatch(long patchOffset, byte[] patch, string patchName)
+    {
+        Program.CancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+        Console.WriteLine($"[{patchName}] Adding...");
+
+        patchList[patchName] = (patchOffset, patch);
+
+        Console.Write($"[{patchName}]");
+
+        Console.ForegroundColor = ConsoleColor.Green;
+
+        Console.WriteLine(" Done.");
+
+        Console.ForegroundColor = ConsoleColor.Gray;
+
+        Console.WriteLine();
+
+        return Task.CompletedTask;
+    }
+
+    public Task QueuePatch(short[] pattern, byte[] patch, string patchName, int offsetBase = 0)
+    {
+        long patchOffset = Data.FindPattern(pattern);
+
+        // No result for the given pattern.
+        if (patchOffset == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.WriteLine($"[{patchName}] No result found.");
+
+            Console.ForegroundColor = ConsoleColor.Gray;
+
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
+
+            Program.CancellationTokenSource.Cancel();
+
+            return Task.CompletedTask;
+        }
+
+        return QueuePatch(patchOffset + offsetBase, patch, patchName);
+    }
+
+    public bool RemapAndPatch(nint viewAddress, int viewSize)
     {
         // Suspend before remapping to prevent crashes.
         NtSuspendProcess(ProcessHandle);
@@ -181,7 +232,7 @@ class WinMemory
                     if (result == NtStatus.Success)
                     {
                         // Apply our patches.
-                        foreach (var p in patches)
+                        foreach (var p in patchList)
                         {
                             var address = p.Value.Item1;
 
@@ -247,10 +298,10 @@ class WinMemory
         return false;
     }
 
-    public bool RemapAndPatch(Dictionary<string, (long, byte[])> patches)
+    public bool RemapAndPatch()
     {
         if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0)
-            return RemapAndPatch(mbi.BaseAddress, (int)mbi.RegionSize, patches);
+            return RemapAndPatch(mbi.BaseAddress, (int)mbi.RegionSize);
 
         return false;
     }

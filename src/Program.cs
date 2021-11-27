@@ -10,8 +10,12 @@ namespace Arctium.WoW.Launcher;
 
 class Program
 {
+    public static CancellationTokenSource CancellationTokenSource { get; private set; }
+
     static async Task Main(string[] args)
     {
+        CancellationTokenSource = new CancellationTokenSource();
+
         PrintHeader("WoW Client Launcher");
 
         LaunchOptions.RootCommand.Handler = CommandHandler.Create((ParseResult parseResult) =>

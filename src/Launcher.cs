@@ -134,13 +134,16 @@ class Launcher
                     memory.RefreshMemoryData((int)gameAppData.Length);
 
                     // Wait for all direct memory patch tasks to complete,
-                    Task.WaitAll(memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
-                                 memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature Modulus"),
-                                 memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.Modulus, "ConnectTo Modulus"),
-                                 memory.PatchMemory(Patterns.Common.ChangeProtocolModulus, Patches.Common.Modulus, "ChangeProtocol (GameCrypt) Modulus"),
-                                 memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
-                                 memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
-                                 memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry"));
+                    Task.WaitAll(new[]
+                    {
+                        memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
+                        memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature Modulus"),
+                        memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.Modulus, "ConnectTo Modulus"),
+                        memory.PatchMemory(Patterns.Common.ChangeProtocolModulus, Patches.Common.Modulus, "ChangeProtocol (GameCrypt) Modulus"),
+                        memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
+                        memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
+                        memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry")
+                    }, Program.CancellationTokenSource.Token);
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
@@ -160,45 +163,43 @@ class Launcher
                            memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == 0)
                         memory.Data = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize);
 
-                    var patches = new Dictionary<string, (long Address, byte[] Data)>();
-
-                    PrepareAntiCrash(memory, patches, ref mbi, ref processInfo);
+                    PrepareAntiCrash(memory, ref mbi, ref processInfo);
 
                     memory.RefreshMemoryData((int)mbi.RegionSize);
 
-                    // Get patch locations.
-                    var certBundleOffset = memory.Data.FindPattern(Patterns.Windows.CertBundle);
-                    var certCommonNameOffset = memory.Data.FindPattern(Patterns.Windows.CertCommonName);
-
-                    if (certBundleOffset == 0 || certCommonNameOffset == 0)
-                    {
-                        NativeWindows.TerminateProcess(processInfo.ProcessHandle, 0);
-
-                        Console.ForegroundColor = ConsoleColor.Red;
-
-                        Console.WriteLine("Not all patterns could be found:");
-                        Console.WriteLine($"CertBundle: {certBundleOffset != 0}");
-                        Console.WriteLine($"CertCommonName: {certCommonNameOffset != 0}");
-                        Console.WriteLine();
-
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-
-                        Console.WriteLine("Please contact the developer.");
-
-                        return false;
-                    }
-
 #if x64
-                    patches["CertBundle"] = (certBundleOffset, Patches.Windows.CertBundle);
-                    patches["CertCommonName"] = (certCommonNameOffset + 5, Patches.Windows.CertCommonName);
+                    Task.WaitAll(new[]
+                    {
+                        memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle"),
+                        memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
+                    }, Program.CancellationTokenSource.Token);
+#if CUSTOM_FILES
+                    Task.WaitAll(new[]
+                    {
+                        memory.QueuePatch(Patterns.Windows.LoadByFileId, Patches.Windows.NoJump, "LoadByFileId", 6),
+                        memory.QueuePatch(Patterns.Windows.LoadByFilePath, Patches.Windows.NoJump, "LoadByFilePath", 3)
+                    }, Program.CancellationTokenSource.Token);
+
+                    var (idAlloc, stringAlloc) = ModLoader.LoadFileMappings(processInfo.ProcessHandle);
+
+                    if (idAlloc != 0 && stringAlloc != 0)
+                    {
+                        if (!ModLoader.HookClient(memory, processInfo.ProcessHandle, idAlloc, stringAlloc))
+                            return false;
+                    }
+#endif
+
 #elif ARM64
-                    patches["CertBundle"] = (certBundleOffset + 19, Patches.Windows.Branch);
-                    patches["CertCommonName"] = (certCommonNameOffset + 6, Patches.Windows.CertCommonName);
+                    Task.WaitAll(new[]
+                    {
+                        memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle", 19),
+                        memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 6),
+                    , Program.CancellationTokenSource.Token);
 #endif
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
-                    if (memory.RemapAndPatch(patches))
+                    if (memory.RemapAndPatch())
                     {
                         Console.WriteLine("Done :) ");
 
@@ -222,8 +223,10 @@ class Launcher
         catch (Exception ex)
         {
             // Just print out the exception we have and kill the game process.
+#if DEBUG
             Console.WriteLine(ex);
             Console.WriteLine(ex.StackTrace);
+#endif
 
             NativeWindows.TerminateProcess(processInfo.ProcessHandle, 0);
         }
@@ -236,7 +239,7 @@ class Launcher
         return false;
     }
 
-    static void PrepareAntiCrash(WinMemory memory, Dictionary<string, (long, byte[])> patches, ref MemoryBasicInformation mbi, ref ProcessInformation processInfo)
+    static void PrepareAntiCrash(WinMemory memory, ref MemoryBasicInformation mbi, ref ProcessInformation processInfo)
     {
         memory.RefreshMemoryData((int)mbi.RegionSize);
 
@@ -248,14 +251,14 @@ class Launcher
 
         // Encrypt integrity offsets and patches and add them to the patch list.
         for (var i = 0; i < integrityOffsets.Length; i++)
-            patches[$"Integrity{i}"] = (integrityOffsets[i], Patches.Windows.Integrity);
+            memory.QueuePatch(integrityOffsets[i], Patches.Windows.Integrity, $"Integrity{i}");
 
         // Get Integrity check locations
         var integrityOffsets2 = memory.Data.FindPattern(Patterns.Windows.Integrity2, int.MaxValue, (int)mbi.RegionSize).ToArray();
 
         // Encrypt integrity offsets and patches and add them to the patch list.
         for (var i = 0; i < integrityOffsets2.Length; i++)
-            patches[$"Integrity{integrityOffsets.Length + i}"] = (integrityOffsets2[i], Patches.Windows.Integrity);
+            memory.QueuePatch(integrityOffsets2[i], Patches.Windows.Integrity, $"Integrity{integrityOffsets.Length + i}");
 
         // Get Remap check locations.
         var remapOffsets = memory.Data.FindPattern(Patterns.Windows.Remap, int.MaxValue, (int)mbi.RegionSize);
@@ -295,9 +298,9 @@ class Launcher
 
                     if (jumpOperand == jumpSize)
                     {
-                            // Add 1 because we patch the instruction start.
-                            // This results in a shorter overall instruction length.
-                            var jumpBytes = new byte[] { 0xE9 }.Concat(BitConverter.GetBytes(jumpSize + 1)).ToArray();
+                        // Add 1 because we patch the instruction start.
+                        // This results in a shorter overall instruction length.
+                        var jumpBytes = new byte[] { 0xE9 }.Concat(BitConverter.GetBytes(jumpSize + 1)).ToArray();
 
                         tempPatches.TryAdd($"Jump{i}", (i, jumpBytes));
                     }
@@ -309,9 +312,9 @@ class Launcher
 
                     if (jumpOperand == jumpSize)
                     {
-                            // Check for 0x48 here. This is an indicator for the test instructions.
-                            // Might need some better checks or future updates.
-                            if (memory.Data[i - 3] == 0x48)
+                        // Check for 0x48 here. This is an indicator for the test instructions.
+                        // Might need some better checks or future updates.
+                        if (memory.Data[i - 3] == 0x48)
                         {
                             var iBytes = BitConverter.GetBytes(i);
                             var jumpBytes = new byte[] { 0xEB };
@@ -324,7 +327,7 @@ class Launcher
 
             // Add the remap crash patches to the patch list.
             foreach (var p in tempPatches)
-                patches[p.Key] = (p.Value.Item1, p.Value.Item2);
+                memory.QueuePatch(p.Value.Item1, p.Value.Item2, p.Key);
 
             lastAddress = (int)a;
         }

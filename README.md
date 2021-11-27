@@ -32,7 +32,9 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 * Execute `dotnet publish -r RuntimeIdentifier /p:Configuration="Configuration" /p:platform="Platform" --self-contained`
 * Native output is placed in `build\Configuration\bin\native`
 
-### Usage Windows
+## Usage
+
+### Windows Usage
 1. Copy `Actium WoW Launcher.exe` to your World of Warcraft folder.
 2. Optional: Edit the `WTF/Config.wtf` to set your portal or use a different config file with the `-config Config2.wtf` launch arg.
 3. Run the `Actium WoW Launcher.exe`

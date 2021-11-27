@@ -194,7 +194,7 @@ class Launcher
                     {
                         memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle", 19),
                         memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 6),
-                    , Program.CancellationTokenSource.Token);
+                    }, Program.CancellationTokenSource.Token);
 #endif
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);

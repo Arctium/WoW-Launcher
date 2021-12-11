@@ -3,9 +3,9 @@ A game launcher for World of Warcraft that allows you to connect to custom serve
 
 [![Support](https://img.shields.io/badge/discord-join-7289DA.svg)](https://arctium.io/discord)
 
-### License & Copyright
+### License, Copyright & Contributions
 
-The WoW Launcher source is licensed under the [MIT](https://github.com/Arctium/WoW-Launcher/blob/master/LICENSE) license.
+Please see our Open Source project [Documentation Repo](https://github.com/Arctium/Documentation)
 
 ### Binary Releases
 You can find signed binary releases at [Releases](https://github.com/Arctium/WoW-Launcher/releases)

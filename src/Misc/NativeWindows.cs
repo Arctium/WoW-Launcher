@@ -43,10 +43,10 @@ static class NativeWindows
     // Page/View
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern NtStatus NtCreateSection(ref nint sectionHandle, uint accessMask, nint zero, ref LargeInteger maximumSize, uint protection, uint allocationAttributes, nint zero2);
-    
+
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern NtStatus NtMapViewOfSection(nint sectionHandle, nint proccessHandle, ref nint baseAddress, nint zero, ulong regionSize, out LargeInteger sectionOffset, out uint viewSize, uint viewSection, nint zero2, int protection);
-    
+
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern NtStatus NtUnmapViewOfSection(nint processHandle, nint baseAddress);
 

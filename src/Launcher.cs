@@ -1,8 +1,9 @@
 ﻿// Copyright (c) Arctium.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using static Arctium.WoW.Launcher.Misc.Helpers;
 using System.CommandLine.Parsing;
+
+using static Arctium.WoW.Launcher.Misc.Helpers;
 
 namespace Arctium.WoW.Launcher;
 
@@ -10,7 +11,7 @@ class Launcher
 {
     public static string PrepareGameLaunch(ParseResult commandLineResult)
     {
-        var gameVersion = commandLineResult.ValueForOption(LaunchOptions.Version);
+        var gameVersion = commandLineResult.GetValueForOption(LaunchOptions.Version);
         var (SubFolder, BinaryName, MajorGameVersion, MinGameBuild) = gameVersion switch
         {
 #if x64
@@ -36,13 +37,13 @@ class Launcher
         var gameFolder = $"{currentFolder}/{SubFolder}";
 
         if (commandLineResult.HasOption(LaunchOptions.GameBinary))
-            BinaryName = commandLineResult.ValueForOption(LaunchOptions.GameBinary);
+            BinaryName = commandLineResult.GetValueForOption(LaunchOptions.GameBinary);
 
         var gameBinaryPath = $"{gameFolder}/{BinaryName}";
 
         if (commandLineResult.HasOption(LaunchOptions.GamePath))
         {
-            gameFolder = commandLineResult.ValueForOption(LaunchOptions.GamePath);
+            gameFolder = commandLineResult.GetValueForOption(LaunchOptions.GamePath);
             gameBinaryPath = $"{gameFolder}/{BinaryName}";
         }
         else if (!File.Exists(gameBinaryPath))
@@ -72,7 +73,7 @@ class Launcher
         }
 
         // Delete the cache folder by default.
-        if (!commandLineResult.ValueForOption(LaunchOptions.KeepCache))
+        if (!commandLineResult.GetValueForOption(LaunchOptions.KeepCache))
         {
             try
             {

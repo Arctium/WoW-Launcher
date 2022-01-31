@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Arctium.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using static Arctium.WoW.Launcher.Misc.Helpers;
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using System.CommandLine.Invocation;
+
+using static Arctium.WoW.Launcher.Misc.Helpers;
 
 namespace Arctium.WoW.Launcher;
 

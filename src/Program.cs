@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Arctium.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 
 using static Arctium.WoW.Launcher.Misc.Helpers;
@@ -18,7 +18,7 @@ class Program
 
         PrintHeader("WoW Client Launcher");
 
-        LaunchOptions.RootCommand.Handler = CommandHandler.Create((ParseResult parseResult) =>
+        LaunchOptions.RootCommand.SetHandler((ParseResult parseResult) =>
         {
             var appPath = Launcher.PrepareGameLaunch(parseResult);
             var gameCommandLine = string.Join(" ", parseResult.UnmatchedTokens);

@@ -11,9 +11,9 @@ Please see our Open Source project [Documentation Repo](https://github.com/Arcti
 You can find signed binary releases at [Releases](https://github.com/Arctium/WoW-Launcher/releases)
 
 ### Supported Game Versions (Windows x86 64 bit)
-* Retail: 9.1.0, 9.1.5 (default)
-* Classic: 2.5.2 (--version Classic)
-* Classic Era: 1.14.0, 1.14.1 (--version ClassicEra)
+* Retail: 9.1.0, 9.1.5, 9.2.0 (default)
+* Classic: 2.5.2, 2.5.3 (--version Classic)
+* Classic Era: 1.14.0, 1.14.1, 1.14.2 (--version ClassicEra)
 
 ### Supported Game Versions (Windows ARM 64 bit)
 * Retail: Coming Soon

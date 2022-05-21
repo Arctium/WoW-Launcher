@@ -12,7 +12,7 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 
 ### Supported Game Versions (Windows x86 64 bit)
 * Retail: 9.1.0, 9.1.5, 9.2.0 (default)
-* Classic: 2.5.2, 2.5.3 (--version Classic)
+* Classic: 2.5.2, 2.5.3, 2.5.4 (--version Classic)
 * Classic Era: 1.14.x (--version ClassicEra)
 
 ### Supported Game Versions (Windows ARM 64 bit)

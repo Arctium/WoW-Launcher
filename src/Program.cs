@@ -18,8 +18,10 @@ class Program
 
         PrintHeader("WoW Client Launcher");
 
-        LaunchOptions.RootCommand.SetHandler((ParseResult parseResult) =>
+        LaunchOptions.RootCommand.SetHandler((InvocationContext context) =>
         {
+            var parseResult = context.ParseResult;
+
             var appPath = Launcher.PrepareGameLaunch(parseResult);
             var gameCommandLine = string.Join(" ", parseResult.UnmatchedTokens);
 

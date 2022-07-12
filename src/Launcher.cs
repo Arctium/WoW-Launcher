@@ -53,7 +53,7 @@ class Launcher
             gameBinaryPath = $"{gameFolder}/{BinaryName}";
         }
 
-        if (!File.Exists(gameBinaryPath) || GetVersionValueFromClient(gameBinaryPath, 3) != MajorGameVersion)
+        if (!File.Exists(gameBinaryPath) || GetVersionValueFromClient(gameBinaryPath).Major != MajorGameVersion)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"[Error] No {gameVersion} client found.");
@@ -61,7 +61,7 @@ class Launcher
             return String.Empty;
         }
 
-        var gameClientBuild = GetVersionValueFromClient(gameBinaryPath, 0);
+        var gameClientBuild = GetVersionValueFromClient(gameBinaryPath).Build;
 
         if (gameClientBuild < MinGameBuild && gameClientBuild != 0)
         {
@@ -128,8 +128,8 @@ class Launcher
                     byte[] certBundleData = Convert.FromBase64String(Patches.Common.CertBundleData);
 
                     // Build the version URL from the game binary build.
-                    int wowBuild = GetVersionValueFromClient(appPath, 0);
-                    byte[] versionPatch = Patches.Common.GetVersionUrl(wowBuild);
+                    var clientVersion = GetVersionValueFromClient(appPath);
+                    byte[] versionPatch = Patches.Common.GetVersionUrl(clientVersion.Build);
 
                     // Refresh the client data before patching.
                     memory.RefreshMemoryData((int)gameAppData.Length);
@@ -138,9 +138,14 @@ class Launcher
                     Task.WaitAll(new[]
                     {
                         memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
-                        memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature Modulus"),
-                        memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.Modulus, "ConnectTo Modulus"),
-                        memory.PatchMemory(Patterns.Common.ChangeProtocolModulus, Patches.Common.Modulus, "ChangeProtocol (GameCrypt) Modulus"),
+                        memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature RsaModulus"),
+                        memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.RsaModulus, "ConnectTo RsaModulus"),
+
+                        // Recent clients have a different signing algorithm in EnterEncryptedMode.
+                        (clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, _, _, _))
+                        ? memory.PatchMemory(Patterns.Common.CryptoEdPublicKey, Patches.Common.CryptoEdPublicKey, "GameCrypto Ed25519 PublicKey")
+                        : memory.PatchMemory(Patterns.Common.CryptoRsaModulus, Patches.Common.RsaModulus, "GameCrypto RsaModulus"),
+
                         memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
                         memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
                         memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry")

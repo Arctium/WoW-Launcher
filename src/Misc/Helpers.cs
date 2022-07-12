@@ -5,21 +5,12 @@ namespace Arctium.WoW.Launcher.Misc;
 
 static class Helpers
 {
-    public static int GetVersionValueFromClient(string fileName, byte field = 0)
+    public static (int Major, int Minor, int Revision, int Build) GetVersionValueFromClient(string fileName)
     {
         var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
 
-        return field switch
-        {
-            // SubPatch
-            1 => fileVersionInfo.FileBuildPart,
-            // Patch value
-            2 => fileVersionInfo.FileMinorPart,
-            // Expansion value
-            3 => fileVersionInfo.FileMajorPart,
-            // buildNumber value
-            _ => fileVersionInfo.FilePrivatePart,
-        };
+        return (fileVersionInfo.FileMajorPart, fileVersionInfo.FileMinorPart,
+                fileVersionInfo.FileBuildPart, fileVersionInfo.FilePrivatePart);
     }
 
     public static void PrintHeader(string serverName)

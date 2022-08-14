@@ -11,8 +11,8 @@ Please see our Open Source project [Documentation Repo](https://github.com/Arcti
 You can find signed binary releases at [Releases](https://github.com/Arctium/WoW-Launcher/releases)
 
 ### Supported Game Versions (Windows x86 64 bit)
-* Retail: 9.1.0, 9.1.5, 9.2.0, 9.2.5 (default)
-* Classic: 2.5.2, 2.5.3, 2.5.4 (--version Classic)
+* Retail: 9.1.0, 9.1.5, 9.2.0, 9.2.5, 9.2.7 (default)
+* Classic: 2.5.2, 2.5.3, 2.5.4, 3.4.0 (--version Classic)
 * Classic Era: 1.14.x (--version ClassicEra)
 
 ### Supported Game Versions (Windows ARM 64 bit)
@@ -29,7 +29,7 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 ### Build Instructions Windows (native)
 * Available runtime identifiers/platforms: win-x64/x64, win-arm64/ARM64
 * Available release configurations: Release, ReleaseSilentMode, ReleaseCustomFiles, ReleaseCustomFilesSilentMode
-* Execute `dotnet publish -r RuntimeIdentifier /p:Configuration="Configuration" /p:platform="Platform" --self-contained`
+* Execute `dotnet publish -r RuntimeIdentifier -c Configuration -p:platform="Platform" --self-contained`
 * Native output is placed in `build\Configuration\bin\native`
 
 ## Usage

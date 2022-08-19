@@ -15,13 +15,13 @@ class Launcher
         var (SubFolder, BinaryName, MajorGameVersion, MinGameBuild) = gameVersion switch
         {
 #if x64
-            GameVersion.Retail => ("_retail_", "Wow.exe", 9, 37862),
-            GameVersion.Classic => ("_classic_", "WowClassic.exe", 2, 39926),
-            GameVersion.ClassicEra => ("_classic_era_", "WowClassic.exe", 1, 40347),
+            GameVersion.Retail => ("_retail_", "Wow.exe", new[] { 9 }, 37862),
+            GameVersion.Classic => ("_classic_", "WowClassic.exe", new[] { 2, 3 }, 39926),
+            GameVersion.ClassicEra => ("_classic_era_", "WowClassic.exe", new[] { 1 }, 40347),
 #elif ARM64
-            GameVersion.Retail => ("_retail_", "Wow-ARM64.exe", 9, 37862),
-            GameVersion.Classic => ("_classic_", "WowClassic-arm64.exe", 2, 39926),
-            GameVersion.ClassicEra => ("_classic_era_", "WowClassic-arm64.exe", 1, 40347),
+            GameVersion.Retail => ("_retail_", "Wow-ARM64.exe", new[] { 9, 10 }, 37862),
+            GameVersion.Classic => ("_classic_", "WowClassic-arm64.exe", new[] { 2, 3 }, 39926),
+            GameVersion.ClassicEra => ("_classic_era_", "WowClassic-arm64.exe", new[] { 1 }, 40347),
 #endif
             _ => throw new NotImplementedException("Invalid game version specified."),
 
@@ -53,7 +53,7 @@ class Launcher
             gameBinaryPath = $"{gameFolder}/{BinaryName}";
         }
 
-        if (!File.Exists(gameBinaryPath) || GetVersionValueFromClient(gameBinaryPath).Major != MajorGameVersion)
+        if (!File.Exists(gameBinaryPath) || !MajorGameVersion.Contains(GetVersionValueFromClient(gameBinaryPath).Major))
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"[Error] No {gameVersion} client found.");

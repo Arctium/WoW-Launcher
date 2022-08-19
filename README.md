@@ -45,7 +45,7 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 2. Place your custom files (mods) in the `files` folder. Be sure to follow the correct folder structure.
 
 ### File mapping sources
-* https://wow.tools/files/ (Choose the Community list file for the patch you want)
+* https://github.com/wowdev/wow-listfile
 
 ### Parameters
 * Use --help

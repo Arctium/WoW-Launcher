@@ -15,7 +15,7 @@ class Launcher
         var (SubFolder, BinaryName, MajorGameVersion, MinGameBuild) = gameVersion switch
         {
 #if x64
-            GameVersion.Retail => ("_retail_", "Wow.exe", new[] { 9 }, 37862),
+            GameVersion.Retail => ("_retail_", "Wow.exe", new[] { 9, 10 }, 37862),
             GameVersion.Classic => ("_classic_", "WowClassic.exe", new[] { 2, 3 }, 39926),
             GameVersion.ClassicEra => ("_classic_era_", "WowClassic.exe", new[] { 1 }, 40347),
 #elif ARM64

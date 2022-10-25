@@ -179,11 +179,15 @@ class Launcher
                         memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle"),
                         memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
                     }, Program.CancellationTokenSource.Token);
-#if CUSTOM_FILES
+    #if CUSTOM_FILES
                     Task.WaitAll(new[]
                     {
                         memory.QueuePatch(Patterns.Windows.LoadByFileId, Patches.Windows.NoJump, "LoadByFileId", 6),
-                        memory.QueuePatch(Patterns.Windows.LoadByFilePath, Patches.Windows.NoJump, "LoadByFilePath", 3)
+
+                        // 10.0.0 (Prepatch) changed a pattern.
+                        (clientVersion is (10, _, _, _))
+                        ? memory.QueuePatch(Patterns.Windows.LoadByFilePathAlternate, Patches.Windows.NoJump, "LoadByFilePath", 3)
+                        : memory.QueuePatch(Patterns.Windows.LoadByFilePath, Patches.Windows.NoJump, "LoadByFilePath", 3)
                     }, Program.CancellationTokenSource.Token);
 
                     var (idAlloc, stringAlloc) = ModLoader.LoadFileMappings(processInfo.ProcessHandle);
@@ -193,7 +197,7 @@ class Launcher
                         if (!ModLoader.HookClient(memory, processInfo.ProcessHandle, idAlloc, stringAlloc))
                             return false;
                     }
-#endif
+    #endif
 
 #elif ARM64
                     Task.WaitAll(new[]

@@ -1,0 +1,40 @@
+name: Build WoW-Launcher
+
+on: ['push']
+
+env:
+  DOTNET_VERSION: '6.0.x'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ['windows'] # TODO macos
+        arch: ['x64'] # TODO Add ARM64 but GitHub Actions currently does not support ARM :(
+        configuration: ['Release', 'ReleaseCustomFiles', 'ReleaseSilentMode', 'ReleaseCustomFilesSilentMode']
+    runs-on: ${{ matrix.os }}-latest
+
+    steps:
+      - name: Checkout repository content
+        uses: actions/checkout@v3
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build/Publish
+        run: dotnet publish --configuration ${{ matrix.configuration }} /p:Platform="${{ matrix.arch }}" --use-current-runtime -p:UsePublishBuildSettings=true
+
+      - name: Copy files
+        run: cp -r ./build/${{ matrix.configuration }}/bin/*/publish/ publish
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: WoW-Launcher-${{ matrix.configuration }}-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
+          path: publish
+          if-no-files-found: error

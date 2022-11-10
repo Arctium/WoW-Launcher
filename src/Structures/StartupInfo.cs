@@ -24,5 +24,5 @@ struct StartupInfo
     public nint StdOutputHandle;
     public nint StdErrorHandle;
 
-    public int Size => Marshal.SizeOf(typeof(StartupInfo));
+    public static int Size => Marshal.SizeOf<StartupInfo>();
 }

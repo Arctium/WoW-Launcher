@@ -13,5 +13,5 @@ struct LargeInteger
     [FieldOffset(4)]
     public int High;
 
-    public int Size => Marshal.SizeOf(typeof(LargeInteger));
+    public static int Size => Marshal.SizeOf<LargeInteger>();
 }

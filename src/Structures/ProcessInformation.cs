@@ -10,5 +10,5 @@ struct ProcessInformation
     public uint ProcessId;
     public uint ThreadId;
 
-    public int Size => Marshal.SizeOf(typeof(ProcessInformation));
+    public static int Size => Marshal.SizeOf<ProcessInformation>();
 }

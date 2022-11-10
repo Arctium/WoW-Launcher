@@ -14,5 +14,5 @@ struct MemoryBasicInformation
     public MemProtection Protect;
     public MemType Type;
 
-    public static int Size => Marshal.SizeOf(typeof(MemoryBasicInformation));
+    public static int Size => Marshal.SizeOf<MemoryBasicInformation>();
 }

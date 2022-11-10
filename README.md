@@ -11,8 +11,8 @@ Please see our Open Source project [Documentation Repo](https://github.com/Arcti
 You can find signed binary releases at [Releases](https://github.com/Arctium/WoW-Launcher/releases)
 
 ### Supported Game Versions (Windows x86 64 bit)
-* Dragonflight: 10.0.0, 10.0.2
-* Shadowlands: 9.1.0, 9.1.5, 9.2.0, 9.2.5, 9.2.7 (default)
+* Dragonflight: 10.0.0, 10.0.2 (implicit)
+* Shadowlands: 9.1.0, 9.1.5, 9.2.0, 9.2.5, 9.2.7 (implicit)
 * Classic: 2.5.2, 2.5.3, 2.5.4, 3.4.0 (--version Classic)
 * Classic Era: 1.14.x (--version ClassicEra)
 
@@ -24,13 +24,13 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 ## Building
 
 ### Build Prerequisites
-* [.NET Core SDK 6.0.0 or later](https://dotnet.microsoft.com/download/dotnet/6.0)
+* [.NET Core SDK 7.0.0 or later](https://dotnet.microsoft.com/download/dotnet/7.0)
 * Optional for native builds: C++ workload through Visual Studio 2022 or latest C++ build tools
 
 ### Build Instructions Windows (native)
 * Available runtime identifiers/platforms: win-x64/x64, win-arm64/ARM64
 * Available release configurations: Release, ReleaseSilentMode, ReleaseCustomFiles, ReleaseCustomFilesSilentMode
-* Execute `dotnet publish -r RuntimeIdentifier -c Configuration -p:platform="Platform" --self-contained`
+* Execute `dotnet publish -r RuntimeIdentifier -c Configuration -p:platform="Platform"`
 * Native output is placed in `build\Configuration\bin\native`
 
 ## Usage

@@ -9,6 +9,8 @@ namespace Arctium.WoW.Launcher;
 
 class Launcher
 {
+    public static CancellationTokenSource CancellationTokenSource => new();
+
     public static string PrepareGameLaunch(ParseResult commandLineResult)
     {
         var gameVersion = commandLineResult.GetValueForOption(LaunchOptions.Version);
@@ -24,7 +26,6 @@ class Launcher
             GameVersion.ClassicEra => ("_classic_era_", "WowClassic-arm64.exe", new[] { 1 }, 40347),
 #endif
             _ => throw new NotImplementedException("Invalid game version specified."),
-
         };
 
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -58,7 +59,7 @@ class Launcher
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"[Error] No {gameVersion} client found.");
 
-            return String.Empty;
+            return string.Empty;
         }
 
         var gameClientBuild = GetVersionValueFromClient(gameBinaryPath).Build;
@@ -69,7 +70,7 @@ class Launcher
             Console.WriteLine($"Your found client version {gameClientBuild} is not supported.");
             Console.WriteLine($"The minimum required build is {MinGameBuild}");
 
-            return String.Empty;
+            return string.Empty;
         }
 
         // Delete the cache folder by default.
@@ -99,11 +100,11 @@ class Launcher
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Starting WoW client...");
 
-            var createSuccess = NativeWindows.CreateProcess(null, $"{appPath} {gameCommandLine}", 0, 0, false, 4U, 0, new FileInfo(appPath)?.DirectoryName, ref startupInfo, out processInfo);
+            var createSuccess = NativeWindows.CreateProcess(null, $"{appPath} {gameCommandLine}", 0, 0, false, 4, 0, new FileInfo(appPath)?.DirectoryName, ref startupInfo, out processInfo);
 
             // On some systems we have to launch the game with the application name used.
             if (!createSuccess)
-                createSuccess = NativeWindows.CreateProcess(appPath, $" {gameCommandLine}", 0, 0, false, 4U, 0, null, ref startupInfo, out processInfo);
+                createSuccess = NativeWindows.CreateProcess(appPath, $" {gameCommandLine}", 0, 0, false, 4, 0, null, ref startupInfo, out processInfo);
 
             // Start process with suspend flags.
             if (createSuccess)
@@ -149,7 +150,7 @@ class Launcher
                         memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
                         memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
                         memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry")
-                    }, Program.CancellationTokenSource.Token);
+                    }, CancellationTokenSource.Token);
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
@@ -178,8 +179,8 @@ class Launcher
                     {
                         memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle"),
                         memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
-                    }, Program.CancellationTokenSource.Token);
-    #if CUSTOM_FILES
+                    }, CancellationTokenSource.Token);
+#if CUSTOM_FILES
                     Task.WaitAll(new[]
                     {
                         memory.QueuePatch(Patterns.Windows.LoadByFileId, Patches.Windows.NoJump, "LoadByFileId", 6),
@@ -188,7 +189,7 @@ class Launcher
                         (clientVersion is (10, _, _, _))
                         ? memory.QueuePatch(Patterns.Windows.LoadByFilePathAlternate, Patches.Windows.NoJump, "LoadByFilePath", 3)
                         : memory.QueuePatch(Patterns.Windows.LoadByFilePath, Patches.Windows.NoJump, "LoadByFilePath", 3)
-                    }, Program.CancellationTokenSource.Token);
+                    }, CancellationTokenSource.Token);
 
                     var (idAlloc, stringAlloc) = ModLoader.LoadFileMappings(processInfo.ProcessHandle);
 
@@ -197,7 +198,7 @@ class Launcher
                         if (!ModLoader.HookClient(memory, processInfo.ProcessHandle, idAlloc, stringAlloc))
                             return false;
                     }
-    #endif
+#endif
 
 #elif ARM64
                     Task.WaitAll(new[]
@@ -281,14 +282,14 @@ class Launcher
             Buffer.BlockCopy(memory.Data, instructionStart, instructions, 0, 6);
 
             // Skip unconditional jumps.
-            if (memory.IsUnconditionalJump(instructions))
+            if (WinMemory.IsUnconditionalJump(instructions))
                 continue;
 
             var operandValue = 0;
 
-            if (memory.IsShortJump(instructions))
+            if (WinMemory.IsShortJump(instructions))
                 operandValue = instructions[1] + 2;
-            else if (memory.IsJump(instructions))
+            else if (WinMemory.IsJump(instructions))
                 operandValue = BitConverter.ToInt32(instructions, 2) + 6;
             else
                 throw new InvalidDataException("Invalid operand value.");
@@ -299,7 +300,7 @@ class Launcher
             // Find all references of real code parts inside the remap check functions.
             Parallel.For(lastAddress, memory.Data.Length, i =>
             {
-                if (memory.IsJump(memory.Data, i))
+                if (WinMemory.IsJump(memory.Data, i))
                 {
                     var jumpOperand = BitConverter.ToInt32(memory.Data, i + 2);
                     var jumpSize = (int)jumpToValue - i - 6;
@@ -313,7 +314,7 @@ class Launcher
                         tempPatches.TryAdd($"Jump{i}", (i, jumpBytes));
                     }
                 }
-                else if (memory.IsShortJump(memory.Data, i))
+                else if (WinMemory.IsShortJump(memory.Data, i))
                 {
                     var jumpOperand = memory.Data[i + 1];
                     var jumpSize = (int)jumpToValue - i - 2;

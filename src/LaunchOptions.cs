@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Arctium.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 
@@ -22,7 +21,7 @@ static class LaunchOptions
         .UseSuggestDirective()
         .Build();
 
-    public static RootCommand RootCommand = new("Arctium\0WoW\0Launcher")
+    public static RootCommand RootCommand = new("Arctium WoW Launcher")
     {
         Version,
         GamePath,
@@ -38,4 +37,3 @@ static class LaunchOptions
         return rootCommand;
     }
 }
-

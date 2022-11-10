@@ -142,7 +142,7 @@ class WinMemory
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
 
-            Program.CancellationTokenSource.Cancel();
+            Launcher.CancellationTokenSource.Cancel();
         }
 
         while (Read(patchOffset, patch.Length)?.SequenceEqual(patch) == false)
@@ -163,7 +163,7 @@ class WinMemory
 
     public Task QueuePatch(long patchOffset, byte[] patch, string patchName)
     {
-        Program.CancellationTokenSource.Token.ThrowIfCancellationRequested();
+        Launcher.CancellationTokenSource.Token.ThrowIfCancellationRequested();
 
         Console.WriteLine($"[{patchName}] Adding...");
 
@@ -198,7 +198,7 @@ class WinMemory
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
 
-            Program.CancellationTokenSource.Cancel();
+            Launcher.CancellationTokenSource.Cancel();
 
             return Task.CompletedTask;
         }
@@ -234,12 +234,12 @@ class WinMemory
                         // Apply our patches.
                         foreach (var p in patchList)
                         {
-                            var address = p.Value.Item1;
+                            var address = p.Value.Address;
 
                             if (address == 0)
                                 continue;
 
-                            var patch = p.Value.Item2;
+                            var patch = p.Value.Data;
 
                             // We are in a different section here.
                             if (address > Data.Length)
@@ -311,7 +311,7 @@ class WinMemory
     {
         try
         {
-            if (NtQueryInformationProcess(processHandle, 0, ref peb, peb.Size, out int sizeInfoReturned) == NtStatus.Success)
+            if (NtQueryInformationProcess(processHandle, 0, ref peb, ProcessBasicInformation.Size, out int sizeInfoReturned) == NtStatus.Success)
                 return Read(peb.PebBaseAddress + 0x10);
         }
         catch (Exception ex)
@@ -323,19 +323,19 @@ class WinMemory
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsShortJump(byte[] instructions, int startIndex = 0)
+    public static bool IsShortJump(byte[] instructions, int startIndex = 0)
     {
         return instructions[startIndex] >= 0x70 && instructions[startIndex] < 0x7F;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsJump(byte[] instructions, int startIndex = 0)
+    public static bool IsJump(byte[] instructions, int startIndex = 0)
     {
         return instructions[startIndex] == 0x0F && instructions[startIndex + 1] >= 0x80 && instructions[startIndex + 1] <= 0x8F;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsUnconditionalJump(byte[] instructions, int startIndex = 0)
+    public static bool IsUnconditionalJump(byte[] instructions, int startIndex = 0)
     {
         return instructions[startIndex] == 0xE9 || instructions[startIndex] == 0xEB;
     }

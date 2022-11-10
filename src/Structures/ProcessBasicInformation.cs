@@ -13,5 +13,5 @@ struct ProcessBasicInformation
     public nint UniqueProcessId;
     public nint InheritedFromUniqueProcessId;
 
-    public int Size => Marshal.SizeOf(typeof(ProcessBasicInformation));
+    public static int Size => Marshal.SizeOf<ProcessBasicInformation>();
 }

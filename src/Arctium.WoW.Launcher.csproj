@@ -1,77 +1,76 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputPath>../build/$(Configuration)/bin</OutputPath>
+        <AssemblyName>Arctium WoW Launcher</AssemblyName>
+        <ApplicationIcon>logo.ico</ApplicationIcon>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>False</AppendRuntimeIdentifierToOutputPath>
+        <Nullable>disable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <AssemblyVersion>10.0.0.0</AssemblyVersion>
+        <FileVersion>10.0.0.0</FileVersion>
+        <Copyright>Arctium</Copyright>
+        <Platforms>x64;ARM64</Platforms>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DefineConstants>$(DefineConstants);$(Platform)</DefineConstants>
+        <Configurations>Debug;Release;ReleaseSilentMode;ReleaseCustomFiles;ReleaseCustomFilesSilentMode</Configurations>
 
-	<PropertyGroup>
-		<OutputPath>../build/$(Configuration)/bin</OutputPath>
-		<AssemblyName>Arctium WoW Launcher</AssemblyName>
-		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
-		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-		<AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
-		<AppendRuntimeIdentifierToOutputPath>False</AppendRuntimeIdentifierToOutputPath>
-		<Nullable>disable</Nullable>
-		<LangVersion>preview</LangVersion>
-		<AssemblyVersion>9.0.0.0</AssemblyVersion>
-		<FileVersion>9.0.0.0</FileVersion>
-		<Copyright>Arctium</Copyright>
-		<Platforms>x64;ARM64</Platforms>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<DefineConstants>$(DefineConstants);$(Platform)</DefineConstants>
-		<Configurations>Debug;Release;ReleaseSilentMode;ReleaseCustomFiles;ReleaseCustomFilesSilentMode</Configurations>
+        <!-- Native AOT settings -->
+        <PublishAot>true</PublishAot>
+        <RootAllApplicationAssemblies>false</RootAllApplicationAssemblies>
+        <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+        <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+        <UseSystemResourceKeys>true</UseSystemResourceKeys>
+        <EventSourceSupport>false</EventSourceSupport>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <IlcScanReflection>false</IlcScanReflection>
+        <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+        <IlcTrimMetadata>true</IlcTrimMetadata>
+        <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+        <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    </PropertyGroup>
 
-		<!-- Native AOT settings -->
-		<RootAllApplicationAssemblies>false</RootAllApplicationAssemblies>
-		<IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
-		<IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)'=='x64'">
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Platform)'=='x64'">
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)'=='ARM64'">
+        <RuntimeIdentifier>win-arm64</RuntimeIdentifier>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Platform)'=='ARM64'">
-		<RuntimeIdentifier>win-arm64</RuntimeIdentifier>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <DefineConstants>$(DefineConstants);$(Platform);CUSTOM_FILES</DefineConstants>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>$(DefineConstants);$(Platform);CUSTOM_FILES</DefineConstants>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<DebugType>none</DebugType>
-		<DebugSymbols>false</DebugSymbols>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='ReleaseCustomFiles'">
+        <DefineConstants>$(DefineConstants);$(Platform);CUSTOM_FILES</DefineConstants>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='ReleaseCustomFiles'">
-		<DefineConstants>$(DefineConstants);$(Platform);CUSTOM_FILES</DefineConstants>
-		<DebugType>none</DebugType>
-		<DebugSymbols>false</DebugSymbols>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='ReleaseSilentMode'">
+        <OutputType>WinExe</OutputType>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='ReleaseSilentMode'">
-		<OutputType>WinExe</OutputType>
-		<DebugType>none</DebugType>
-		<DebugSymbols>false</DebugSymbols>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='ReleaseCustomFilesSilentMode'">
+        <OutputType>WinExe</OutputType>
+        <DefineConstants>$(DefineConstants);$(Platform);CUSTOM_FILES</DefineConstants>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='ReleaseCustomFilesSilentMode'">
-		<OutputType>WinExe</OutputType>
-		<DefineConstants>$(DefineConstants);$(Platform);CUSTOM_FILES</DefineConstants>
-		<DebugType>none</DebugType>
-		<DebugSymbols>false</DebugSymbols>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-		<PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-		<PackageReference Include="System.CommandLine" Version="2.0.0-*" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<TrimmerRootAssembly Include="mscorlib" />
-		<TrimmerRootAssembly Include="System.Runtime" />
-		<TrimmerRootAssembly Include="System.Diagnostics.FileVersionInfo" />
-		<TrimmerRootAssembly Include="System.Threading.Thread" />
-	</ItemGroup>
-
+    <ItemGroup>
+        <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0" />
+        <PackageReference Include="System.CommandLine" Version="2.0.0-*" />
+    </ItemGroup>
 </Project>

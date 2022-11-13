@@ -16,7 +16,7 @@ LaunchOptions.RootCommand.SetHandler(context =>
     var appPath = Launcher.PrepareGameLaunch(context.ParseResult);
     var gameCommandLine = string.Join(" ", context.ParseResult.UnmatchedTokens);
 
-    if (string.IsNullOrEmpty(appPath) || !Launcher.LaunchGame(appPath, gameCommandLine))
+    if (string.IsNullOrEmpty(appPath) || !Launcher.LaunchGame(appPath, gameCommandLine, context.ParseResult.HasOption(LaunchOptions.UseStaticAuthSeed)))
         WaitAndExit(5000);
 });
 

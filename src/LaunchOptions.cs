@@ -12,6 +12,7 @@ static class LaunchOptions
     public static Option<string> GamePath = new("--path");
     public static Option<string> GameBinary = new("--binary");
     public static Option<bool> KeepCache = new("--keepcache", () => true);
+    public static Option<bool> UseStaticAuthSeed = new("--staticseed");
 
     public static Parser Instance => new CommandLineBuilder(ConfigureCommandLine(RootCommand))
         .UseHelp()
@@ -26,7 +27,8 @@ static class LaunchOptions
         Version,
         GamePath,
         GameBinary,
-        KeepCache
+        KeepCache,
+        UseStaticAuthSeed
     };
 
     static Command ConfigureCommandLine(Command rootCommand)

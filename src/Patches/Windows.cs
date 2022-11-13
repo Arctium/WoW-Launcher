@@ -11,6 +11,7 @@ static class Windows
     public static byte[] CertCommonName = { 0xB0, 0x01 };
     public static byte[] ShortJump = { 0xEB };
     public static byte[] NoJump = { 0x00, 0x00, 0x00, 0x00 };
+    public static byte[] AuthSeed = { 0x0F, 0x28, 0x05, 0xEF, 0xBE, 0xAD, 0xDE, 0x0F, 0x11, 0x02, 0xC3 };
 #elif ARM64
     public static byte[] Integrity = { };
     public static byte[] Branch = { 0xB5 };

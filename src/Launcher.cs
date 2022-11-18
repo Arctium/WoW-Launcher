@@ -1,4 +1,4 @@
-﻿// Copyright (c) Arctium.
+// Copyright (c) Arctium.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Parsing;
@@ -183,9 +183,10 @@ class Launcher
 #if CUSTOM_FILES
                     Task.WaitAll(new[]
                     {
-                        memory.QueuePatch(Patterns.Windows.LoadByFileId, Patches.Windows.NoJump, "LoadByFileId", 6),
+                        (clientVersion is (10, _, _, _))
+                        ? memory.QueuePatch(Patterns.Windows.LoadByFileIdAlternate, Patches.Windows.NoJump, "LoadByFileId", 3)
+                        : memory.QueuePatch(Patterns.Windows.LoadByFileId, Patches.Windows.NoJump, "LoadByFileId", 6),
 
-                        // 10.0.0 (Prepatch) changed a pattern.
                         (clientVersion is (10, _, _, _))
                         ? memory.QueuePatch(Patterns.Windows.LoadByFilePathAlternate, Patches.Windows.NoJump, "LoadByFilePath", 3)
                         : memory.QueuePatch(Patterns.Windows.LoadByFilePath, Patches.Windows.NoJump, "LoadByFilePath", 3)

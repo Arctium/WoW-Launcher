@@ -40,6 +40,9 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 2. Optional: Edit the `WTF/Config.wtf` to set your portal or use a different config file with the `-config Config2.wtf` launch arg.
 3. Run the `Actium WoW Launcher.exe`
 
+### Static Auth Seed Usage
+* Use the --staticseed launch parameter
+
 ### Custom File Loading Usage
 1. Get or create your own file mapping (.txt) file(s) and place it in the `mappings` folder.
    File Format: `fileId;filePath`

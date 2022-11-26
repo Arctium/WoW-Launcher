@@ -3,6 +3,7 @@
 
 namespace Arctium.WoW.Launcher;
 
+#if x64
 class ModLoader
 {
     static readonly HashSet<uint> loadedFileIds = new();
@@ -192,3 +193,4 @@ class ModLoader
         return (idAlloc, stringAlloc);
     }
 }
+#endif

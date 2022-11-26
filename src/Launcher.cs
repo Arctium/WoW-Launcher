@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Parsing;
+using System.Reflection.PortableExecutable;
 
 using static Arctium.WoW.Launcher.Misc.Helpers;
 
@@ -157,7 +158,7 @@ class Launcher
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
-                    WaitForUnpack(ref processInfo, memory, ref mbi);
+                    WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData);
 
 #if x64
                     Task.WaitAll(new[]
@@ -204,9 +205,9 @@ class Launcher
 #elif ARM64
                     Task.WaitAll(new[]
                     {
-                        memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle", 19),
+                        memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.Branch, "CertBundle", 19),
                         memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 6),
-                    }, Program.CancellationTokenSource.Token);
+                    }, CancellationTokenSource.Token);
 #endif
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
@@ -251,6 +252,7 @@ class Launcher
 
     static long GenerateAuthSeedFunctionPatch(WinMemory memory, long modulusOffset)
     {
+#if x64
         var authSeedLoadOffset = memory.Data.FindPattern(Patterns.Windows.AuthSeed);
 
         if (authSeedLoadOffset == 0)
@@ -267,10 +269,14 @@ class Launcher
         Unsafe.WriteUnaligned(ref Patches.Windows.AuthSeed[3], (uint)(modulusOffset - authSeedFunctionOffset - 7));
 
         return authSeedFunctionOffset;
+#else
+        throw new NotImplementedException();
+#endif
     }
 
-    static void WaitForUnpack(ref ProcessInformation processInfo, WinMemory memory, ref MemoryBasicInformation mbi)
+    static void WaitForUnpack(ref ProcessInformation processInfo, WinMemory memory, ref MemoryBasicInformation mbi, Stream gameAppData)
     {
+#if x64
         // Wait for client initialization.
         var initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
 
@@ -286,7 +292,23 @@ class Launcher
         while (memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == null ||
                memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == 0)
             memory.Data = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize);
+#else
+        // Get PE header info for client initialization.
+        var peHeaders = new PEHeaders(gameAppData);
 
+        SectionHeader textSectionHeader = peHeaders.SectionHeaders.Single(sectionHeader => sectionHeader.Name.ToLower() == ".text");
+
+        gameAppData.Position = textSectionHeader.VirtualSize + textSectionHeader.PointerToRawData;
+
+        var textSectionEndValue = gameAppData.ReadByte();
+
+        Console.WriteLine("Waiting for client initialization...");
+
+        var virtualTextSectionEnd = memory.BaseAddress + textSectionHeader.VirtualAddress + textSectionHeader.VirtualSize;
+
+        while (memory?.Read(virtualTextSectionEnd, 1)?[0] == null || memory?.Read(virtualTextSectionEnd, 1)?[0] == textSectionEndValue)
+            Thread.Sleep(100);
+#endif
         PrepareAntiCrash(memory, ref mbi, ref processInfo);
 
         memory.RefreshMemoryData((int)mbi.RegionSize);

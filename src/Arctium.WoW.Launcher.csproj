@@ -17,6 +17,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DefineConstants>$(DefineConstants);$(Platform)</DefineConstants>
         <Configurations>Debug;Release;ReleaseSilentMode;ReleaseCustomFiles;ReleaseCustomFilesSilentMode</Configurations>
+        <Optimize>True</Optimize>
 
         <!-- Native AOT settings -->
         <PublishAot>true</PublishAot>
@@ -43,6 +44,7 @@
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <DefineConstants>$(DefineConstants);$(Platform);CUSTOM_FILES</DefineConstants>
+        <Optimize>False</Optimize>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Release'">

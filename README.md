@@ -42,6 +42,7 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 
 ### Static Auth Seed Usage
 * Use the --staticseed launch parameter
+* On server side add `179D3DC3235629D07113A9B3867F97A7` as auth seed in the database.
 
 ### Custom File Loading Usage
 1. Get or create your own file mapping (.txt) file(s) and place it in the `mappings` folder.
@@ -51,7 +52,7 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 ### File mapping sources
 * https://github.com/wowdev/wow-listfile
 
-### Parameters
+### Launch Parameters
 * Use --help
 
 ## WARNING

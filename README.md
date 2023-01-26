@@ -11,7 +11,7 @@ Please see our Open Source project [Documentation Repo](https://github.com/Arcti
 You can find signed binary releases at [Releases](https://github.com/Arctium/WoW-Launcher/releases)
 
 ### Supported Game Versions (Windows x86 64 bit)
-* Dragonflight: 10.0.0, 10.0.2 (implicit)
+* Dragonflight: 10.0.0, 10.0.2, 10.0.5 (implicit)
 * Shadowlands: 9.1.0, 9.1.5, 9.2.0, 9.2.5, 9.2.7 (implicit)
 * Classic: 2.5.2, 2.5.3, 2.5.4, 3.4.0 (--version Classic)
 * Classic Era: 1.14.x (--version ClassicEra)

@@ -20,7 +20,7 @@ class ModLoader
         };
 
         var trampolineInjectAddress = NativeWindows.VirtualAllocEx(processHandle, IntPtr.Zero, (uint)asm.Length + 32, 0x00001000, (uint)MemProtection.ExecuteRead);
-        var hookInstructions = new byte[] { 0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0, 0x90, 0x90, 0x90 };
+        var hookInstructions = new byte[] { 0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0, 0x90 };
 
         // Copy the asm code address.
         Buffer.BlockCopy(BitConverter.GetBytes(trampolineInjectAddress), 0, hookInstructions, 2, 8);
@@ -51,7 +51,7 @@ class ModLoader
 
         memory.Write(trampolineInjectAddress, asm);
 
-        var jmpInstruction = new byte[] { 0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0, 0x90, 0x90, 0x90 };
+        var jmpInstruction = new byte[] { 0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0, 0x90 };
 
         // Copy the address where we continue to the jump instruction set.
         Buffer.BlockCopy(BitConverter.GetBytes((ulong)(hookAddress + memory.BaseAddress + 13)), 0, jmpInstruction, 2, 8);

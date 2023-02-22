@@ -12,6 +12,7 @@ static class Common
 
     public static short[] CertBundle = "{\"Created\":".ToPattern();
     public static short[] VersionUrl = "%s.patch.battle.net:1119/%s/versions".ToPattern();
+    public static short[] CdnsUrl = "http://%s.patch.battle.net:1119/%s/cdns".ToPattern();
     public static short[] Portal = ".actual.battle.net\0".ToPattern();
     public static short[] CommandLineHelp = "World of Warcraft usage".ToPattern();
 }

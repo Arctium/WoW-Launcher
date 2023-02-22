@@ -44,6 +44,7 @@ static class Common
                                                0x29, 0xEC, 0x36, 0x7F, 0xB0, 0xF3, 0x41, 0xF2, 0x8E, 0x0F, 0x08, 0xD0, 0x37, 0xBA, 0xFC, 0x69 };
 
     public static byte[] GetVersionUrl(int build) => Encoding.UTF8.GetBytes($"ngdp.arctium.io/%s/%s/{build}/versions");
+    public static byte[] CdnsUrl => Encoding.UTF8.GetBytes("http://ngdp.arctium.io/customs/wow/cdns");
     public static byte[] Portal = new byte[Patterns.Common.Portal.Length];
 
     // Our own ca_bundle.txt.signed file.

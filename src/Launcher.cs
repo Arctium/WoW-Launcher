@@ -153,6 +153,7 @@ class Launcher
 
                         memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
                         memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
+                        memory.PatchMemory(Patterns.Common.CdnsUrl, Patches.Common.CdnsUrl, "CDNs URL"),
                         memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry")
                     }, CancellationTokenSource.Token);
 

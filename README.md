@@ -10,13 +10,13 @@ Please see our Open Source project [Documentation Repo](https://github.com/Arcti
 ### Binary Releases
 You can find signed binary releases at [Releases](https://github.com/Arctium/WoW-Launcher/releases)
 
-### Supported Game Versions (Windows x86 64 bit)
+### Supported Game Versions (Windows x86 64 bit, Release)
 * Dragonflight: 10.0.0, 10.0.2, 10.0.5 (implicit)
-* Shadowlands: 9.1.0, 9.1.5, 9.2.0, 9.2.5, 9.2.7 (implicit)
-* Classic: 2.5.2, 2.5.3, 2.5.4, 3.4.x (--version Classic)
+* Shadowlands: 9.x (implicit)
+* Classic BC/WotLK: 2.5.x, 3.4.x (--version Classic)
 * Classic Era: 1.14.x (--version ClassicEra)
 
-### Supported Game Versions (Windows ARM 64 bit)
+### Supported Game Versions (Windows ARM 64 bit, Release)
 * Retail: Coming Soon
 * Classic: Coming Soon
 * Classic Era: Coming Soon
@@ -52,8 +52,22 @@ You can find signed binary releases at [Releases](https://github.com/Arctium/WoW
 ### File mapping sources
 * https://github.com/wowdev/wow-listfile
 
-### Launch Parameters
-* Use --help
+### Launch Parameters (--help)
+```
+Usage:
+  "Arctium WoW Launcher.exe" [options] [[--] <additional arguments>...]]
+
+Options:
+  --version <Classic|ClassicEra|Retail>  [default: Retail]
+  --path <path>
+  --binary <binary>
+  --keepcache                            [default: True]
+  --staticseed
+  -?, -h, --help                         Show help and usage information
+
+Additional Arguments:
+  Arguments passed to the application that is being run.
+```
 
 ## WARNING
 

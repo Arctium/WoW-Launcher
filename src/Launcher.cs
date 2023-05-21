@@ -139,7 +139,7 @@ static class Launcher
                     // We need to cache this here since we are using our RSA modulus as auth seed.
                     var modulusOffset = memory.Data.FindPattern(Patterns.Common.SignatureModulus);
 
-                    if (clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
+                    if (clientVersion is (1, >= 14, _, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
                     {
                         Task.WaitAll(new[]
                         {
@@ -169,7 +169,7 @@ static class Launcher
                     WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData);
 
 #if x64
-                    if (clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
+                    if (clientVersion is (1, >= 14, _, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
                     {
                         Task.WaitAll(new[]
                         {

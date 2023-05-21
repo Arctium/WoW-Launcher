@@ -72,7 +72,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0" />
+        <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.*" />
         <PackageReference Include="System.CommandLine" Version="2.0.0-*" />
     </ItemGroup>
 </Project>

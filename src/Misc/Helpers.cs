@@ -41,17 +41,4 @@ static class Helpers
         Console.WriteLine();
         Console.WriteLine($"Operating System: {RuntimeInformation.OSDescription}");
     }
-
-    public static bool IsFileClosed(string filename)
-    {
-        try
-        {
-            using (var inputStream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.None))
-                return false;
-        }
-        catch (Exception)
-        {
-            return true;
-        }
-    }
 }

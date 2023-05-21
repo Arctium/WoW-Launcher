@@ -8,12 +8,17 @@ namespace Arctium.WoW.Launcher;
 
 static class LaunchOptions
 {
+    public static bool IsDevModeAllowed { get; set; }
+
     public static Option<GameVersion> Version = new("--version", () => GameVersion.Retail);
     public static Option<string> GamePath = new("--path");
     public static Option<string> GameBinary = new("--binary");
     public static Option<bool> KeepCache = new("--keepcache", () => true);
     public static Option<bool> UseStaticAuthSeed = new("--staticseed");
-    public static Option<bool> DevMode = new("--dev", () => false);
+    public static Option<bool> DevMode = new("--dev", () => true);
+
+    // Game command line options.
+    public static Option<string> GameConfig = new("-config", () => "Config.wtf");
 
     public static Parser Instance => new CommandLineBuilder(ConfigureCommandLine(RootCommand))
         .UseHelp()
@@ -30,7 +35,8 @@ static class LaunchOptions
         GameBinary,
         KeepCache,
         UseStaticAuthSeed,
-        DevMode
+        DevMode,
+        GameConfig
     };
 
     static Command ConfigureCommandLine(Command rootCommand)

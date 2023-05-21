@@ -10,7 +10,7 @@ static class Launcher
 {
     public static readonly CancellationTokenSource CancellationTokenSource = new();
 
-    public static string PrepareGameLaunch(ParseResult commandLineResult)
+    public static string PrepareGameLaunch(ParseResult commandLineResult, IPFilter ipFilter)
     {
         var gameVersion = commandLineResult.GetValueForOption(LaunchOptions.Version);
         var (SubFolder, BinaryName, MajorGameVersion, MinGameBuild) = gameVersion switch
@@ -85,6 +85,27 @@ static class Launcher
                 // We don't care if it worked. Swallow it!
             }
         }
+
+        var configPath = $"{gameFolder}/WTF/{commandLineResult.GetValueForOption(LaunchOptions.GameConfig)}";
+
+        if (!File.Exists(configPath))
+            LaunchOptions.IsDevModeAllowed = false;
+        else
+        {
+            var config = File.ReadAllText(configPath);
+
+            LaunchOptions.IsDevModeAllowed = IsDevModeAllowed(ipFilter, config);
+        }
+
+        if (!LaunchOptions.IsDevModeAllowed)
+            LaunchOptions.DevMode = new("--dev", () => false);
+
+        var devModeEnabled = commandLineResult.GetValueForOption(LaunchOptions.DevMode) && LaunchOptions.IsDevModeAllowed;
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Developer mode: {(devModeEnabled ? "Enabled" : "Disabled")}");
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Gray;
 
         return gameBinaryPath;
     }
@@ -177,7 +198,7 @@ static class Launcher
                             memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
                         }, CancellationTokenSource.Token);
                     }
-                    else if (commandLineResult.GetValueForOption(LaunchOptions.DevMode))
+                    else if (LaunchOptions.IsDevModeAllowed && commandLineResult.GetValueForOption(LaunchOptions.DevMode))
                     {
                         Task.WaitAll(new[]
                         {
@@ -273,6 +294,8 @@ static class Launcher
 
         return false;
     }
+
+    static bool IsDevModeAllowed(IPFilter ipFilter, string config) => ipFilter.IsInRange(ParsePortal(config));
 
     static long GenerateAuthSeedFunctionPatch(WinMemory memory, long modulusOffset)
     {

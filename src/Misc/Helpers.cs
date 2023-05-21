@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Arctium.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Net;
+
 namespace Arctium.WoW.Launcher.Misc;
 
 static class Helpers
@@ -40,5 +42,41 @@ static class Helpers
 
         Console.WriteLine();
         Console.WriteLine($"Operating System: {RuntimeInformation.OSDescription}");
+    }
+
+    public static ReadOnlySpan<char> ParsePortal(string config)
+    {
+        const string portalKey = "SET portal";
+
+        var portalIndex = config.IndexOf(portalKey, StringComparison.Ordinal);
+
+        if (portalIndex == -1)
+            throw new ArgumentException("Config file does not contain the portal variable.");
+
+        var startQuoteIndex = config.IndexOf('"', portalIndex);
+
+        if (startQuoteIndex == -1)
+            throw new ArgumentException("Invalid format for the portal variable.");
+
+        var endQuoteIndex = config.IndexOf('"', startQuoteIndex + 1);
+
+        if (endQuoteIndex == -1)
+            throw new ArgumentException("Invalid format for the portal variable.");
+
+        var portalLength = endQuoteIndex - startQuoteIndex - 1;
+        var portalSpan = config.AsSpan(startQuoteIndex + 1, portalLength);
+        var colonIndex = portalSpan.IndexOf(':');
+        var ipSpan = colonIndex != -1 ? portalSpan[..colonIndex] : portalSpan;
+        var portalString = ipSpan.ToString().Trim();
+
+        if (IPAddress.TryParse(portalString, out var ipAddress))
+            return ipAddress.ToString().AsSpan();
+
+        var ipv4Address = Dns.GetHostAddresses(portalString).FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+
+        if (ipv4Address == null)
+            throw new Exception("No IPv4 address found for the provided hostname.");
+
+        return ipv4Address.ToString().AsSpan();
     }
 }

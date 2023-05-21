@@ -2,15 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Parsing;
-using System.Reflection.PortableExecutable;
-
 using static Arctium.WoW.Launcher.Misc.Helpers;
 
 namespace Arctium.WoW.Launcher;
 
-class Launcher
+static class Launcher
 {
-    public static CancellationTokenSource CancellationTokenSource => new();
+    public static readonly CancellationTokenSource CancellationTokenSource = new();
 
     public static string PrepareGameLaunch(ParseResult commandLineResult)
     {
@@ -91,7 +89,7 @@ class Launcher
         return gameBinaryPath;
     }
 
-    public static bool LaunchGame(string appPath, string gameCommandLine, bool useStaticAuthSeed)
+    public static bool LaunchGame(string appPath, string gameCommandLine, ParseResult commandLineResult)
     {
         var startupInfo = new StartupInfo();
         var processInfo = new ProcessInformation();
@@ -101,7 +99,8 @@ class Launcher
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Starting WoW client...");
 
-            var createSuccess = NativeWindows.CreateProcess(null, $"{appPath} {gameCommandLine}", 0, 0, false, 4, 0, new FileInfo(appPath)?.DirectoryName, ref startupInfo, out processInfo);
+            var createSuccess = NativeWindows.CreateProcess(null, $"{appPath} {gameCommandLine}", 0, 0, false, 4, 0, new FileInfo(appPath).DirectoryName,
+                ref startupInfo, out processInfo);
 
             // On some systems we have to launch the game with the application name used.
             if (!createSuccess)
@@ -117,10 +116,11 @@ class Launcher
                 // Resume the process to initialize it.
                 NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
-                var mbi = new MemoryBasicInformation();
+                MemoryBasicInformation mbi;
 
                 // Wait for the memory region to be initialized.
-                while (NativeWindows.VirtualQueryEx(processInfo.ProcessHandle, memory.BaseAddress, out mbi, MemoryBasicInformation.Size) == 0 || mbi.RegionSize <= 0x1000)
+                while (NativeWindows.VirtualQueryEx(processInfo.ProcessHandle, memory.BaseAddress, out mbi, MemoryBasicInformation.Size) == 0 ||
+                       mbi.RegionSize <= 0x1000)
                 { }
 
                 if (mbi.BaseAddress != 0)
@@ -139,17 +139,24 @@ class Launcher
                     // We need to cache this here since we are using our RSA modulus as auth seed.
                     var modulusOffset = memory.Data.FindPattern(Patterns.Common.SignatureModulus);
 
+                    if (clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
+                    {
+                        Task.WaitAll(new[]
+                        {
+                            memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
+                            memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature RsaModulus")
+                        }, CancellationTokenSource.Token);
+                    }
+
                     // Wait for all direct memory patch tasks to complete,
                     Task.WaitAll(new[]
                     {
-                        memory.PatchMemory(Patterns.Common.CertBundle, certBundleData, "Certificate Bundle"),
-                        memory.PatchMemory(Patterns.Common.SignatureModulus, Patches.Common.SignatureModulus, "Certificate Signature RsaModulus"),
                         memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.RsaModulus, "ConnectTo RsaModulus"),
 
                         // Recent clients have a different signing algorithm in EnterEncryptedMode.
-                        (clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, _, _, _))
-                        ? memory.PatchMemory(Patterns.Common.CryptoEdPublicKey, Patches.Common.CryptoEdPublicKey, "GameCrypto Ed25519 PublicKey")
-                        : memory.PatchMemory(Patterns.Common.CryptoRsaModulus, Patches.Common.RsaModulus, "GameCrypto RsaModulus"),
+                        clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, _, _, _)
+                            ? memory.PatchMemory(Patterns.Common.CryptoEdPublicKey, Patches.Common.CryptoEdPublicKey, "GameCrypto Ed25519 PublicKey")
+                            : memory.PatchMemory(Patterns.Common.CryptoRsaModulus, Patches.Common.RsaModulus, "GameCrypto RsaModulus"),
 
                         memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
                         memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
@@ -162,13 +169,24 @@ class Launcher
                     WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData);
 
 #if x64
-                    Task.WaitAll(new[]
+                    if (clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
                     {
-                        memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle"),
-                        memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
-                    }, CancellationTokenSource.Token);
+                        Task.WaitAll(new[]
+                        {
+                            memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle"),
+                            memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
+                        }, CancellationTokenSource.Token);
+                    }
+                    else if (commandLineResult.GetValueForOption(LaunchOptions.DevMode))
+                    {
+                        Task.WaitAll(new[]
+                        {
+                            memory.QueuePatch(Patterns.Windows.CertChain, Patches.Windows.CertChain, "CertChain"),
+                            memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
+                        }, CancellationTokenSource.Token);
+                    }
 
-                    if (useStaticAuthSeed)
+                    if (commandLineResult.HasOption(LaunchOptions.UseStaticAuthSeed))
                     {
                         Console.ForegroundColor = ConsoleColor.Cyan;
                         Console.WriteLine("Static auth seed used. Be sure that the server you are connecting to supports it.");
@@ -186,12 +204,12 @@ class Launcher
                     Task.WaitAll(new[]
                     {
                         (clientVersion is (10, _, _, _))
-                        ? memory.QueuePatch(Patterns.Windows.LoadByFileIdAlternate, Patches.Windows.NoJump, "LoadByFileId", 3)
-                        : memory.QueuePatch(Patterns.Windows.LoadByFileId, Patches.Windows.NoJump, "LoadByFileId", 6),
+                            ? memory.QueuePatch(Patterns.Windows.LoadByFileIdAlternate, Patches.Windows.NoJump, "LoadByFileId", 3)
+                            : memory.QueuePatch(Patterns.Windows.LoadByFileId, Patches.Windows.NoJump, "LoadByFileId", 6),
 
                         (clientVersion is (10, _, _, _))
-                        ? memory.QueuePatch(Patterns.Windows.LoadByFilePathAlternate, Patches.Windows.NoJump, "LoadByFilePath", 3)
-                        : memory.QueuePatch(Patterns.Windows.LoadByFilePath, Patches.Windows.NoJump, "LoadByFilePath", 3)
+                            ? memory.QueuePatch(Patterns.Windows.LoadByFilePathAlternate, Patches.Windows.NoJump, "LoadByFilePath", 3)
+                            : memory.QueuePatch(Patterns.Windows.LoadByFilePath, Patches.Windows.NoJump, "LoadByFilePath", 3)
                     }, CancellationTokenSource.Token);
 
                     var (idAlloc, stringAlloc) = ModLoader.LoadFileMappings(processInfo.ProcessHandle);
@@ -234,9 +252,14 @@ class Launcher
                 }
             }
         }
+        // Only exit and do not print any exception messages to the console.
+        catch (OperationCanceledException)
+        {
+            NativeWindows.TerminateProcess(processInfo.ProcessHandle, 0);
+        }
+        // Just print out the exception we have and kill the game process.
         catch (Exception ex)
         {
-            // Just print out the exception we have and kill the game process.
             Console.WriteLine(ex);
             Console.WriteLine(ex.StackTrace);
 
@@ -279,19 +302,19 @@ class Launcher
     {
 #if x64
         // Wait for client initialization.
-        var initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
+        var initOffset = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
 
         while (initOffset == 0)
         {
-            initOffset = memory?.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
+            initOffset = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
 
             Console.WriteLine("Waiting for client initialization...");
         }
 
         initOffset += BitConverter.ToUInt32(memory.Read(initOffset + memory.BaseAddress + 2, 4), 0) + 10;
 
-        while (memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == null ||
-               memory?.Read(initOffset + memory.BaseAddress, 1)?[0] == 0)
+        while (memory.Read(initOffset + memory.BaseAddress, 1)?[0] == null ||
+               memory.Read(initOffset + memory.BaseAddress, 1)?[0] == 0)
             memory.Data = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize);
 #else
         // Get PE header info for client initialization.
@@ -343,7 +366,6 @@ class Launcher
         foreach (var a in remapOffsets)
         {
             var instructionStart = (int)a + 4;
-            var instructionEnd = (int)a + 4 + 6;
             var instructions = new byte[6];
 
             Buffer.BlockCopy(memory.Data, instructionStart, instructions, 0, 6);
@@ -352,7 +374,7 @@ class Launcher
             if (WinMemory.IsUnconditionalJump(instructions))
                 continue;
 
-            var operandValue = 0;
+            int operandValue;
 
             if (WinMemory.IsShortJump(instructions))
                 operandValue = instructions[1] + 2;
@@ -392,7 +414,6 @@ class Launcher
                         // Might need some better checks or future updates.
                         if (memory.Data[i - 3] == 0x48)
                         {
-                            var iBytes = BitConverter.GetBytes(i);
                             var jumpBytes = new byte[] { 0xEB };
 
                             tempPatches.TryAdd($"ShortJump{i}", (i, jumpBytes));

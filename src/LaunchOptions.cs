@@ -4,7 +4,7 @@
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 
-namespace Arctium.WoW.Launcher.Misc;
+namespace Arctium.WoW.Launcher;
 
 static class LaunchOptions
 {
@@ -13,6 +13,7 @@ static class LaunchOptions
     public static Option<string> GameBinary = new("--binary");
     public static Option<bool> KeepCache = new("--keepcache", () => true);
     public static Option<bool> UseStaticAuthSeed = new("--staticseed");
+    public static Option<bool> DevMode = new("--dev", () => false);
 
     public static Parser Instance => new CommandLineBuilder(ConfigureCommandLine(RootCommand))
         .UseHelp()
@@ -28,7 +29,8 @@ static class LaunchOptions
         GamePath,
         GameBinary,
         KeepCache,
-        UseStaticAuthSeed
+        UseStaticAuthSeed,
+        DevMode
     };
 
     static Command ConfigureCommandLine(Command rootCommand)

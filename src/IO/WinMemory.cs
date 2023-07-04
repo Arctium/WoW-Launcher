@@ -232,28 +232,7 @@ class WinMemory
                     if (result == NtStatus.Success)
                     {
                         // Apply our patches.
-                        foreach (var p in patchList)
-                        {
-                            var address = p.Value.Address;
-
-                            if (address == 0)
-                                continue;
-
-                            var patch = p.Value.Data;
-
-                            // We are in a different section here.
-                            if (address > Data.Length)
-                            {
-                                if (address < BaseAddress)
-                                    address += BaseAddress;
-
-                                Write(address, patch, MemProtection.ReadWrite);
-                                continue;
-                            }
-
-                            for (var i = 0; i < patch.Length; i++)
-                                Data[address + i] = patch[i];
-                        }
+                        ApplyPatches(true);
 
                         nint viewBase2 = 0;
 
@@ -298,8 +277,44 @@ class WinMemory
         return false;
     }
 
-    public bool RemapAndPatch()
+    void ApplyPatches(bool remap)
     {
+        foreach (var p in patchList)
+        {
+            var address = p.Value.Address;
+
+            if (address == 0)
+                continue;
+
+            var patch = p.Value.Data;
+
+            // We are in a different section here.
+            if (address > Data.Length)
+            {
+                if (address < BaseAddress)
+                    address += BaseAddress;
+
+                Write(address, patch, MemProtection.ReadWrite);
+
+                continue;
+            }
+
+            if (remap)
+            {
+                for (var i = 0; i < patch.Length; i++)
+                    Data[address + i] = patch[i];
+            }
+        }
+    }
+
+    public bool RemapAndPatch(bool remap)
+    {
+        if (!remap)
+        {
+            ApplyPatches(remap);
+            return true;
+        }
+
         if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0)
             return RemapAndPatch(mbi.BaseAddress, (int)mbi.RegionSize);
 

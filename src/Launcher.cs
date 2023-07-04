@@ -270,7 +270,7 @@ static class Launcher
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
-                    if (memory.RemapAndPatch())
+                    if (memory.RemapAndPatch(antiCrash))
                     {
                         Console.WriteLine("Done :) ");
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Net;
+using System.Net.Sockets;
 
 namespace Arctium.WoW.Launcher.Misc;
 
@@ -69,14 +70,23 @@ static class Helpers
         var ipSpan = colonIndex != -1 ? portalSpan[..colonIndex] : portalSpan;
         var portalString = ipSpan.ToString().Trim();
 
-        if (IPAddress.TryParse(portalString, out var ipAddress))
-            return ipAddress.ToString().AsSpan();
+        try
+        {
+            if (IPAddress.TryParse(portalString, out var ipAddress))
+                return ipAddress.ToString().AsSpan();
 
-        var ipv4Address = Dns.GetHostAddresses(portalString).FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            var ipv4Address = Dns.GetHostAddresses(portalString).FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
 
-        if (ipv4Address == null)
-            throw new Exception("No IPv4 address found for the provided hostname.");
+            if (ipv4Address == null)
+                throw new Exception("No IPv4 address found for the provided hostname.");
 
-        return ipv4Address.ToString().AsSpan();
+            return ipv4Address.ToString().AsSpan();
+        }
+        catch (SocketException)
+        {
+            Console.WriteLine("No valid portal found. Dev (Local) mode disabled.");
+
+            return string.Empty.AsSpan();
+        }
     }
 }

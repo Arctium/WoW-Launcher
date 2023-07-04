@@ -152,6 +152,14 @@ static class Launcher
 
                     // Build the version URL from the game binary build.
                     var clientVersion = GetVersionValueFromClient(appPath);
+
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine();
+                    Console.WriteLine($"Client Build {clientVersion}");
+                    Console.WriteLine($"Client Path '{appPath}'");
+                    Console.WriteLine();
+                    Console.ResetColor();
+
                     byte[] versionPatch = Patches.Common.GetVersionUrl(clientVersion.Build);
 
                     // Refresh the client data before patching.
@@ -187,7 +195,17 @@ static class Launcher
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
-                    WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData);
+                    var antiCrash = false;
+
+                    // Enable anti crash in dev mode, custom file mode or static auth seed mode.
+#if CUSTOM_FILES
+                    antiCrash = true;
+#else
+                    antiCrash = commandLineResult.HasOption(LaunchOptions.UseStaticAuthSeed) ||
+                                commandLineResult.GetValueForOption(LaunchOptions.DevMode) && LaunchOptions.IsDevModeAllowed;
+#endif
+
+                    WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData, antiCrash);
 
 #if x64
                     if (clientVersion is (1, >= 14, _, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
@@ -321,7 +339,7 @@ static class Launcher
 #endif
     }
 
-    static void WaitForUnpack(ref ProcessInformation processInfo, WinMemory memory, ref MemoryBasicInformation mbi, Stream gameAppData)
+    static void WaitForUnpack(ref ProcessInformation processInfo, WinMemory memory, ref MemoryBasicInformation mbi, Stream gameAppData, bool antiCrash)
     {
 #if x64
         // Wait for client initialization.
@@ -356,7 +374,8 @@ static class Launcher
         while (memory?.Read(virtualTextSectionEnd, 1)?[0] == null || memory?.Read(virtualTextSectionEnd, 1)?[0] == textSectionEndValue)
             Thread.Sleep(100);
 #endif
-        PrepareAntiCrash(memory, ref mbi, ref processInfo);
+        if (antiCrash)
+            PrepareAntiCrash(memory, ref mbi, ref processInfo);
 
         memory.RefreshMemoryData((int)mbi.RegionSize);
     }

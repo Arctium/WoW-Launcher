@@ -15,7 +15,8 @@ LaunchOptions.RootCommand.SetHandler(context =>
 {
     CreateDevIPFilter(out var ipFilter);
 
-    var appPath = Launcher.PrepareGameLaunch(context.ParseResult, ipFilter);
+    // Prefer / instead of \ for the client path.
+    var appPath = Launcher.PrepareGameLaunch(context.ParseResult, ipFilter).Replace("\\", "/");
     var gameCommandLine = string.Join(" ", context.ParseResult.UnmatchedTokens);
 
     // Add config parameter to the game command line.

@@ -168,7 +168,7 @@ static class Launcher
                     // We need to cache this here since we are using our RSA modulus as auth seed.
                     var modulusOffset = memory.Data.FindPattern(Patterns.Common.SignatureModulus);
 
-                    if (clientVersion is (1, >= 14, _, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
+                    if (clientVersion is (1, >= 14, <= 3, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
                     {
                         Task.WaitAll(new[]
                         {
@@ -183,7 +183,7 @@ static class Launcher
                         memory.PatchMemory(Patterns.Common.ConnectToModulus, Patches.Common.RsaModulus, "ConnectTo RsaModulus"),
 
                         // Recent clients have a different signing algorithm in EnterEncryptedMode.
-                        clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, _, _, _)
+                        clientVersion is (9, 2, 7, _) or (3, _, _, _) or (10, _, _, _) or (1, >= 14, >= 4, _)
                             ? memory.PatchMemory(Patterns.Common.CryptoEdPublicKey, Patches.Common.CryptoEdPublicKey, "GameCrypto Ed25519 PublicKey")
                             : memory.PatchMemory(Patterns.Common.CryptoRsaModulus, Patches.Common.RsaModulus, "GameCrypto RsaModulus"),
 
@@ -208,7 +208,7 @@ static class Launcher
                     WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData, antiCrash);
 
 #if x64
-                    if (clientVersion is (1, >= 14, _, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
+                    if (clientVersion is (1, >= 14, <= 3, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _))
                     {
                         Task.WaitAll(new[]
                         {

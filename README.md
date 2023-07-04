@@ -8,8 +8,9 @@ A game launcher for World of Warcraft that allows you to connect to custom serve
 Please see our Open Source project [Documentation Repo](https://github.com/Arctium/Documentation)
 
 ### IMPORTANT NOTE FOR LOCAL DEVELOPMENT & SERVER CONNECTIONS
-#### Applies to: 3.4.2 or later, 10.1.5 or later
-* LOCAL HOSTNAME & IP: `USE` the `--dev` command line parameter to to avoid issues with invalid certificate chains.
+#### Applies to: 1.14.4 or later, 3.4.2 or later, 10.1.5 or later
+* **Dev Mode is enabled by default for local game portals.**
+* LOCAL HOSTNAME & IP: `USE` the `--dev` command line parameter to force the dev mode to avoid issues with invalid certificate chains.
 * EXTERNAL HOSTNAME:
     * `DO NOT` use the `--dev` command line parameter.
     * `USE` a valid certificate matching your authentication/bnet server host name.

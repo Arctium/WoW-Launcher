@@ -167,7 +167,7 @@ static class Launcher
 
                     // We need to cache this here since we are using our RSA modulus as auth seed.
                     var modulusOffset = memory.Data.FindPattern(Patterns.Common.SignatureModulus);
-                    var legacyCertMode = clientVersion is (1, >= 14, <= 3, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, _, _) and not (10, 1, 5, _);
+                    var legacyCertMode = clientVersion is (1, >= 14, <= 3, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, < 5, _);
 
                     if (legacyCertMode)
                     {

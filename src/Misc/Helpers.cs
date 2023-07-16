@@ -68,7 +68,7 @@ static class Helpers
         var portalSpan = config.AsSpan(startQuoteIndex + 1, portalLength);
         var colonIndex = portalSpan.IndexOf(':');
         var ipSpan = colonIndex != -1 ? portalSpan[..colonIndex] : portalSpan;
-        var port = colonIndex != -1 ? int.Parse(portalSpan[colonIndex..]) : 1119;
+        var port = colonIndex != -1 ? int.Parse(portalSpan[(colonIndex + 1)..]) : 1119;
         var portalString = ipSpan.ToString().Trim();
 
         try

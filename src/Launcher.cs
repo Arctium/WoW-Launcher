@@ -124,7 +124,14 @@ static class Launcher
                     (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
                     {
                         if (sslPolicyErrors == SslPolicyErrors.None)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Certificate for server '{portal.HostName}' successfully validated.");
+                            Console.WriteLine();
+                            Console.ResetColor();
+
                             return true;
+                        }
 
                         // Redirect to the trusted cert warning.
                         throw new AuthenticationException();
@@ -132,7 +139,7 @@ static class Launcher
                     null
                 );
                 
-                sslStream.AuthenticateAsClient("portal.HostName");
+                sslStream.AuthenticateAsClient(portal.HostName);
             }
             catch (SocketException)
             {

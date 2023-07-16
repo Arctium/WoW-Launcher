@@ -45,7 +45,7 @@ static class Helpers
         Console.WriteLine($"Operating System: {RuntimeInformation.OSDescription}");
     }
 
-    public static ReadOnlySpan<char> ParsePortal(string config)
+    public static (string IPAddress, string HostName, int Port) ParsePortal(string config)
     {
         const string portalKey = "SET portal";
 
@@ -68,25 +68,26 @@ static class Helpers
         var portalSpan = config.AsSpan(startQuoteIndex + 1, portalLength);
         var colonIndex = portalSpan.IndexOf(':');
         var ipSpan = colonIndex != -1 ? portalSpan[..colonIndex] : portalSpan;
+        var port = colonIndex != -1 ? int.Parse(portalSpan[colonIndex..]) : 1119;
         var portalString = ipSpan.ToString().Trim();
 
         try
         {
             if (IPAddress.TryParse(portalString, out var ipAddress))
-                return ipAddress.ToString().AsSpan();
+                return (ipAddress.ToString(), portalString, port);
 
             var ipv4Address = Dns.GetHostAddresses(portalString).FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
 
             if (ipv4Address == null)
                 throw new Exception("No IPv4 address found for the provided hostname.");
 
-            return ipv4Address.ToString().AsSpan();
+            return (ipv4Address.ToString(), portalString, port);
         }
         catch (SocketException)
         {
             Console.WriteLine("No valid portal found. Dev (Local) mode disabled.");
 
-            return string.Empty.AsSpan();
+            return (string.Empty, string.Empty, port);
         }
     }
 }

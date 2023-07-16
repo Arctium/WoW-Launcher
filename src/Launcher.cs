@@ -2,6 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.Parsing;
+using System.Net.Security;
+using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using static Arctium.WoW.Launcher.Misc.Helpers;
 
 namespace Arctium.WoW.Launcher;
@@ -87,14 +91,17 @@ static class Launcher
         }
 
         var configPath = $"{gameFolder}/WTF/{commandLineResult.GetValueForOption(LaunchOptions.GameConfig)}";
+        (string IPAddress, string HostName, int Port) portal = new();
 
         if (!File.Exists(configPath))
             LaunchOptions.IsDevModeAllowed = false;
         else
         {
             var config = File.ReadAllText(configPath);
+            
+            portal = ParsePortal(config);
 
-            LaunchOptions.IsDevModeAllowed = IsDevModeAllowed(ipFilter, config);
+            LaunchOptions.IsDevModeAllowed = IsDevModeAllowed(ipFilter, portal.IPAddress);
         }
 
         if (!LaunchOptions.IsDevModeAllowed)
@@ -106,6 +113,46 @@ static class Launcher
         Console.WriteLine($"Developer mode: {(devModeEnabled ? "Enabled" : "Disabled")}");
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Gray;
+        
+        // Check for valid certificate when dev mode is disabled.
+        if (!devModeEnabled)
+        {
+            try
+            {
+                var tcpClient = new TcpClient(portal.HostName, portal.Port);
+                var sslStream = new SslStream(tcpClient.GetStream(), false,
+                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                    {
+                        if (sslPolicyErrors == SslPolicyErrors.None)
+                            return true;
+
+                        // Redirect to the trusted cert warning.
+                        throw new AuthenticationException();
+                    },
+                    null
+                );
+                
+                sslStream.AuthenticateAsClient("portal.HostName");
+            }
+            catch (SocketException)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{portal.HostName}:{portal.Port} is offline.");
+                Console.ResetColor();
+
+                return string.Empty;
+            }
+            catch (AuthenticationException)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"Server with host name {portal.HostName} does not have a trusted certificate attached.");
+                Console.WriteLine("If you are the server owner be sure to generate one and replace the default bnet server certificate.");
+                Console.WriteLine("One way to generate one is through Let's Encrypt.");
+                Console.ResetColor();
+
+                return string.Empty;
+            }
+        }
 
         return gameBinaryPath;
     }
@@ -314,7 +361,7 @@ static class Launcher
         return false;
     }
 
-    static bool IsDevModeAllowed(IPFilter ipFilter, string config) => ipFilter.IsInRange(ParsePortal(config));
+    static bool IsDevModeAllowed(IPFilter ipFilter, string portalIP) => ipFilter.IsInRange(portalIP);
 
     static long GenerateAuthSeedFunctionPatch(WinMemory memory, long modulusOffset)
     {

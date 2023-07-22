@@ -98,7 +98,7 @@ static class Launcher
         else
         {
             var config = File.ReadAllText(configPath);
-            
+
             portal = ParsePortal(config);
 
             LaunchOptions.IsDevModeAllowed = IsDevModeAllowed(ipFilter, portal.IPAddress);
@@ -113,7 +113,7 @@ static class Launcher
         Console.WriteLine($"Developer mode: {(devModeEnabled ? "Enabled" : "Disabled")}");
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Gray;
-        
+
         // Check for valid certificate when dev mode is disabled.
         if (!devModeEnabled)
         {
@@ -138,7 +138,7 @@ static class Launcher
                     },
                     null
                 );
-                
+
                 sslStream.AuthenticateAsClient(portal.HostName);
             }
             catch (SocketException)
@@ -166,6 +166,38 @@ static class Launcher
 
     public static bool LaunchGame(string appPath, string gameCommandLine, ParseResult commandLineResult)
     {
+        // Build the version URL from the game binary build.
+        var clientVersion = GetVersionValueFromClient(appPath);
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Client Build {clientVersion}");
+        Console.WriteLine($"Client Path '{appPath}'");
+        Console.WriteLine();
+        Console.ResetColor();
+
+        // Assign the region and product dependent version url to check it's online status.
+        var versionUrl = commandLineResult.GetValueForOption(LaunchOptions.VersionUrl)
+            ?? Patches.Common.GetVersionUrl(clientVersion.Build, commandLineResult.GetValueForOption(LaunchOptions.CdnRegion),
+                                            commandLineResult.GetValueForOption(LaunchOptions.ProductName));
+
+        if (!CheckUrl(versionUrl, fallbackUrl: Patterns.Common.VersionUrl).GetAwaiter().GetResult())
+            versionUrl = Patterns.Common.VersionUrl;
+        else
+            // Assign the region and product independent version url.
+            versionUrl = commandLineResult.GetValueForOption(LaunchOptions.VersionUrl) ?? Patches.Common.GetVersionUrl(clientVersion.Build);
+
+        var cdnsUrl = commandLineResult.GetValueForOption(LaunchOptions.CdnsUrl) ?? Patches.Common.CdnsUrl;
+
+        if (!CheckUrl(cdnsUrl, fallbackUrl: Patterns.Common.CdnsUrl).GetAwaiter().GetResult())
+            cdnsUrl = Patterns.Common.CdnsUrl;
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("Game CDN connection info:");
+        Console.WriteLine($"Version file: {versionUrl}");
+        Console.WriteLine($"CDNs file: {cdnsUrl}");
+        Console.WriteLine();
+        Console.ResetColor();
+
         var startupInfo = new StartupInfo();
         var processInfo = new ProcessInformation();
 
@@ -204,17 +236,6 @@ static class Launcher
 
                     byte[] certBundleData = Convert.FromBase64String(Patches.Common.CertBundleData);
 
-                    // Build the version URL from the game binary build.
-                    var clientVersion = GetVersionValueFromClient(appPath);
-
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine();
-                    Console.WriteLine($"Client Build {clientVersion}");
-                    Console.WriteLine($"Client Path '{appPath}'");
-                    Console.WriteLine();
-                    Console.ResetColor();
-
-                    byte[] versionPatch = Patches.Common.GetVersionUrl(clientVersion.Build);
 
                     // Refresh the client data before patching.
                     memory.RefreshMemoryData((int)gameAppData.Length);
@@ -232,6 +253,7 @@ static class Launcher
                         }, CancellationTokenSource.Token);
                     }
 
+
                     // Wait for all direct memory patch tasks to complete,
                     Task.WaitAll(new[]
                     {
@@ -243,8 +265,8 @@ static class Launcher
                             : memory.PatchMemory(Patterns.Common.CryptoRsaModulus, Patches.Common.RsaModulus, "GameCrypto RsaModulus"),
 
                         memory.PatchMemory(Patterns.Common.Portal, Patches.Common.Portal, "Login Portal"),
-                        memory.PatchMemory(Patterns.Common.VersionUrl, versionPatch, "Version URL"),
-                        memory.PatchMemory(Patterns.Common.CdnsUrl, Patches.Common.CdnsUrl, "CDNs URL"),
+                        memory.PatchMemory(Patterns.Common.VersionUrl.ToPattern(), Encoding.UTF8.GetBytes(versionUrl), "Version URL"),
+                        memory.PatchMemory(Patterns.Common.CdnsUrl.ToPattern(), Encoding.UTF8.GetBytes(cdnsUrl), "CDNs URL"),
                         memory.PatchMemory(Patterns.Windows.LauncherLogin, Patches.Windows.LauncherLogin, "Launcher Login Registry")
                     }, CancellationTokenSource.Token);
 

@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using Arctium.WoW.Launcher;
+
 using static Arctium.WoW.Launcher.Misc.Helpers;
 
 // "Arctium" should not be removed from the final binary name.

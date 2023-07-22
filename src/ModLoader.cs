@@ -29,7 +29,7 @@ class ModLoader
         var hookAddress = memory.Data.FindPattern(Patterns.Windows.CustomFileIdHook);
 
         if (hookAddress == 0)
-            return false;
+            throw new InvalidDataException("CustomFileIdHook");
 
         // Read original data from the hook function.
         var originalBytes = memory.Read(memory.BaseAddress + hookAddress, 13);

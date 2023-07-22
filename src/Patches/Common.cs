@@ -43,8 +43,8 @@ static class Common
     public static byte[] CryptoEdPublicKey = { 0x02, 0x59, 0x6F, 0x0D, 0x0C, 0x06, 0x1A, 0x8B, 0x30, 0x74, 0x59, 0x88, 0xFD, 0x72, 0xC5, 0x9E,
                                                0x29, 0xEC, 0x36, 0x7F, 0xB0, 0xF3, 0x41, 0xF2, 0x8E, 0x0F, 0x08, 0xD0, 0x37, 0xBA, 0xFC, 0x69 };
 
-    public static byte[] GetVersionUrl(int build) => Encoding.UTF8.GetBytes($"ngdp.arctium.io/%s/%s/{build}/versions");
-    public static byte[] CdnsUrl => Encoding.UTF8.GetBytes("http://ngdp.arctium.io/customs/wow/cdns");
+    public static string GetVersionUrl(int build, string region = "%s", string product = "%s") => $"http://ngdp.arctium.io/{region}/{product}/{build}/versions";
+    public static string CdnsUrl => "http://ngdp.arctium.io/customs/wow/cdns";
     public static byte[] Portal = new byte[Patterns.Common.Portal.Length];
 
     // Our own ca_bundle.txt.signed file.

@@ -16,6 +16,10 @@ static class LaunchOptions
     public static Option<bool> KeepCache = new("--keepcache", () => true);
     public static Option<bool> UseStaticAuthSeed = new("--staticseed");
     public static Option<bool> DevMode = new("--dev", () => true);
+    public static Option<string> VersionUrl = new("--versionurl");
+    public static Option<string> CdnsUrl = new("--cdnsurl");
+    public static Option<string> ProductName = new("--product", () => "wow");
+    public static Option<string> CdnRegion = new("--region", () => "EU");
 
     // Game command line options.
     public static Option<string> GameConfig = new("-config", () => "Config.wtf");
@@ -36,6 +40,10 @@ static class LaunchOptions
         KeepCache,
         UseStaticAuthSeed,
         DevMode,
+        VersionUrl,
+        CdnsUrl,
+        ProductName,
+        CdnRegion,
         GameConfig
     };
 

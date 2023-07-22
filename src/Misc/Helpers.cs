@@ -8,6 +8,15 @@ namespace Arctium.WoW.Launcher.Misc;
 
 static class Helpers
 {
+    public static bool IsDebugBuild()
+    {
+#if DEBUG
+        return true;
+#else
+        return false;
+#endif
+    }
+
     public static (int Major, int Minor, int Revision, int Build) GetVersionValueFromClient(string fileName)
     {
         var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
@@ -88,6 +97,27 @@ static class Helpers
             Console.WriteLine("No valid portal found. Dev (Local) mode disabled.");
 
             return (string.Empty, string.Empty, port);
+        }
+    }
+
+    public static async Task<bool> CheckUrl(string url, string fallbackUrl)
+    {
+        using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+
+        try
+        {
+            var result = await httpClient.GetAsync(url);
+
+            if (!result.IsSuccessStatusCode)
+                Console.WriteLine($"{url} not reachable. Falling back to {fallbackUrl}");
+
+            return result.IsSuccessStatusCode;
+        }
+        catch (Exception)
+        {
+            Console.WriteLine($"{url} not reachable. Falling back to {fallbackUrl}");
+
+            return false;
         }
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using static Arctium.WoW.Launcher.Misc.NativeWindows;
+using static Arctium.WoW.Launcher.Misc.Helpers;
 
 namespace Arctium.WoW.Launcher.IO;
 
@@ -127,9 +128,12 @@ class WinMemory
 
     public void Write(long address, byte[] data, MemProtection newProtection = MemProtection.ReadWrite) => Write((nint)address, data, newProtection);
 
-    public Task PatchMemory(short[] pattern, byte[] patch, string patchName)
+    public Task PatchMemory(short[] pattern, byte[] patch, string patchName, bool? printInfo = null)
     {
-        Console.WriteLine($"[{patchName}] Patching...");
+        printInfo ??= IsDebugBuild();
+
+        if (printInfo.Value)
+            Console.WriteLine($"[{patchName}] Patching...");
 
         long patchOffset = Data.FindPattern(pattern, BaseAddress);
 
@@ -148,41 +152,43 @@ class WinMemory
         while (Read(patchOffset, patch.Length)?.SequenceEqual(patch) == false)
             Write(patchOffset, patch);
 
-        Console.Write($"[{patchName}]");
-
-        Console.ForegroundColor = ConsoleColor.Green;
-
-        Console.WriteLine(" Done.");
-
-        Console.ForegroundColor = ConsoleColor.Gray;
-
-        Console.WriteLine();
+        if (printInfo.Value)
+        {
+            Console.Write($"[{patchName}]");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(" Done.");
+            Console.ResetColor();
+            Console.WriteLine();
+        }
 
         return Task.CompletedTask;
     }
 
-    public Task QueuePatch(long patchOffset, byte[] patch, string patchName)
+    public Task QueuePatch(long patchOffset, byte[] patch, string patchName, bool? printInfo = null)
     {
         Launcher.CancellationTokenSource.Token.ThrowIfCancellationRequested();
 
-        Console.WriteLine($"[{patchName}] Adding...");
+        printInfo ??= IsDebugBuild();
 
-        patchList[patchName] = (patchOffset, patch);
+        if (printInfo.Value)
+        {
+            Console.WriteLine($"[{patchName}] Adding...");
 
-        Console.Write($"[{patchName}]");
+            patchList[patchName] = (patchOffset, patch);
 
-        Console.ForegroundColor = ConsoleColor.Green;
-
-        Console.WriteLine(" Done.");
-
-        Console.ForegroundColor = ConsoleColor.Gray;
-
-        Console.WriteLine();
+            Console.Write($"[{patchName}]");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(" Done.");
+            Console.ResetColor();
+            Console.WriteLine();
+        }
+        else
+            patchList[patchName] = (patchOffset, patch);
 
         return Task.CompletedTask;
     }
 
-    public Task QueuePatch(short[] pattern, byte[] patch, string patchName, int offsetBase = 0)
+    public Task QueuePatch(short[] pattern, byte[] patch, string patchName, int offsetBase = 0, bool? printInfo = null)
     {
         long patchOffset = Data.FindPattern(pattern);
 
@@ -190,11 +196,8 @@ class WinMemory
         if (patchOffset == 0)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-
             Console.WriteLine($"[{patchName}] No result found.");
-
-            Console.ForegroundColor = ConsoleColor.Gray;
-
+            Console.ResetColor();
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
 
@@ -203,7 +206,7 @@ class WinMemory
             return Task.CompletedTask;
         }
 
-        return QueuePatch(patchOffset + offsetBase, patch, patchName);
+        return QueuePatch(patchOffset + offsetBase, patch, patchName, printInfo);
     }
 
     public bool RemapAndPatch(nint viewAddress, int viewSize)

@@ -7,7 +7,7 @@ using Arctium.WoW.Launcher;
 using static Arctium.WoW.Launcher.Misc.Helpers;
 
 // "Arctium" should not be removed from the final binary name.
-if (!Process.GetCurrentProcess().ProcessName.ToLowerInvariant().Contains("arctium"))
+if (!Process.GetCurrentProcess().ProcessName.Contains("arctium", StringComparison.InvariantCultureIgnoreCase))
     WaitAndExit();
 
 PrintHeader("WoW Client Launcher");
@@ -28,6 +28,7 @@ LaunchOptions.RootCommand.SetHandler(context =>
 });
 
 await LaunchOptions.Instance.InvokeAsync(args);
+return;
 
 void CreateDevIPFilter(out IPFilter ipFilter)
 {

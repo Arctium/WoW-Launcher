@@ -85,7 +85,7 @@ static class Helpers
             if (IPAddress.TryParse(portalString, out var ipAddress))
                 return (ipAddress.ToString(), portalString, port);
 
-            var ipv4Address = Dns.GetHostAddresses(portalString).FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            var ipv4Address = Dns.GetHostAddresses(portalString).FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
 
             if (ipv4Address == null)
                 throw new Exception("No IPv4 address found for the provided hostname.");
@@ -102,7 +102,9 @@ static class Helpers
 
     public static async Task<bool> CheckUrl(string url, string fallbackUrl)
     {
-        using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        using var httpClient = new HttpClient();
+        
+        httpClient.Timeout = TimeSpan.FromSeconds(5);
 
         try
         {

@@ -51,10 +51,10 @@ static class NativeWindows
     public static extern NtStatus NtUnmapViewOfSection(nint processHandle, nint baseAddress);
 
     [DllImport("ntdll.dll", SetLastError = true)]
-    public static extern nint NtResumeProcess(nint ProcessHandle);
+    public static extern nint NtResumeProcess(nint processHandle);
 
     [DllImport("ntdll.dll", SetLastError = true)]
-    public static extern nint NtSuspendProcess(nint ProcessHandle);
+    public static extern nint NtSuspendProcess(nint processHandle);
 
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern nint NtClose(nint handle);

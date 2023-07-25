@@ -7,12 +7,7 @@ namespace Arctium.WoW.Launcher.Misc;
 
 public class IPFilter
 {
-    readonly ICollection<(IPAddress, IPAddress)> _ipRanges;
-
-    public IPFilter()
-    {
-        _ipRanges = new List<(IPAddress, IPAddress)>();
-    }
+    readonly List<(IPAddress, IPAddress)> _ipRanges = new();
 
     public void AddCidrRange(ReadOnlySpan<char> cidr)
     {

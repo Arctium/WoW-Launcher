@@ -6,7 +6,7 @@ namespace Arctium.WoW.Launcher;
 #if x64
 class ModLoader
 {
-    static readonly HashSet<uint> loadedFileIds = new();
+    static readonly HashSet<uint> _loadedFileIds = new();
 
     public static bool HookClient(WinMemory memory, nint processHandle, nint idAlloc, nint stringAlloc)
     {
@@ -38,7 +38,7 @@ class ModLoader
         memory.QueuePatch(hookAddress, hookInstructions, "CustomFileIdHook");
 
         // Copy count bytes.
-        Buffer.BlockCopy(BitConverter.GetBytes(loadedFileIds.Count), 0, asm, 35, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(_loadedFileIds.Count), 0, asm, 35, 4);
 
         // Copy mapping ptr bytes.
         Buffer.BlockCopy(BitConverter.GetBytes(idAlloc), 0, asm, 12, 8);
@@ -121,7 +121,7 @@ class ModLoader
         return default;
     }
 
-    static bool GetFileMappingData(List<(byte[] fileId, byte[] path, uint StringPos)> loadedMappings, out uint count, ref uint stringLength, string mappingFile)
+    static void GetFileMappingData(List<(byte[] fileId, byte[] path, uint StringPos)> loadedMappings, out uint count, ref uint stringLength, string mappingFile)
     {
         var mappings = File.ReadAllLines(mappingFile).Where(s => s.Trim() != "")
             .Select(s => s.ToLowerInvariant().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
@@ -145,13 +145,13 @@ class ModLoader
             {
                 var id = uint.Parse(fileId);
 
-                if (loadedFileIds.Contains(id))
+                if (_loadedFileIds.Contains(id))
                 {
                     Console.WriteLine($"Skipping overlapping file '{id} - {f}'.");
                     continue;
                 }
 
-                loadedFileIds.Add(id);
+                _loadedFileIds.Add(id);
 
                 loadedMappings.Add((BitConverter.GetBytes(id), pathBytes, stringLength));
 
@@ -160,11 +160,6 @@ class ModLoader
         }
 
         count = (uint)loadedMappings.Count;
-
-        if (loadedMappings.Count == 0)
-            return false;
-
-        return true;
     }
 
     static (nint, nint) AllocateFileMapping(nint handle, List<(byte[] fileId, byte[] path, uint StringPos)> loadedMappings, uint count, uint stringLength)
@@ -176,11 +171,11 @@ class ModLoader
 
         Parallel.For(0, loadedMappings.Count, m =>
         {
-            var (fileId, path, StringPos) = loadedMappings[m];
+            var (fileId, path, stringPos) = loadedMappings[m];
 
             Buffer.BlockCopy(fileId, 0, idAllocData, m * 12, fileId.Length);
-            Buffer.BlockCopy(BitConverter.GetBytes(stringAlloc + StringPos), 0, idAllocData, (m * 12) + 4, 8);
-            Buffer.BlockCopy(path, 0, stringAllocData, (int)StringPos, path.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(stringAlloc + stringPos), 0, idAllocData, (m * 12) + 4, 8);
+            Buffer.BlockCopy(path, 0, stringAllocData, (int)stringPos, path.Length);
         });
 
         NativeWindows.WriteProcessMemory(handle, idAlloc, idAllocData, idAllocData.Length, out var _);

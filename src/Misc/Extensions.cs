@@ -60,13 +60,12 @@ static class Extensions
         {
             match = data.FindPattern(pattern, match, 0);
 
-            if (match != 0)
-            {
-                if (!matchList.Contains(match))
-                    matchList.Add(match);
-
-                match += pattern.Length;
-            }
+            if (match == 0)
+                continue;
+            
+            matchList.Add(match);
+            
+            match += pattern.Length;
 
         } while ((matchList.Count < maxMatches || match < maxOffset) && match != 0);
 

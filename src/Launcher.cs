@@ -5,7 +5,7 @@ using System.CommandLine.Parsing;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
+
 using static Arctium.WoW.Launcher.Misc.Helpers;
 
 namespace Arctium.WoW.Launcher;
@@ -17,7 +17,7 @@ static class Launcher
     public static string PrepareGameLaunch(ParseResult commandLineResult, IPFilter ipFilter)
     {
         var gameVersion = commandLineResult.GetValueForOption(LaunchOptions.Version);
-        var (SubFolder, BinaryName, MajorGameVersion, MinGameBuild) = gameVersion switch
+        var (subFolder, binaryName, majorGameVersion, minGameBuild) = gameVersion switch
         {
 #if x64
             GameVersion.Retail => ("_retail_", "Wow.exe", new[] { 9, 10 }, 37862),
@@ -38,26 +38,26 @@ static class Launcher
         Console.ResetColor();
 
         var currentFolder = AppDomain.CurrentDomain.BaseDirectory;
-        var gameFolder = $"{currentFolder}/{SubFolder}";
+        var gameFolder = $"{currentFolder}/{subFolder}";
 
         if (commandLineResult.HasOption(LaunchOptions.GameBinary))
-            BinaryName = commandLineResult.GetValueForOption(LaunchOptions.GameBinary);
+            binaryName = commandLineResult.GetValueForOption(LaunchOptions.GameBinary);
 
-        var gameBinaryPath = $"{gameFolder}/{BinaryName}";
+        var gameBinaryPath = $"{gameFolder}/{binaryName}";
 
         if (commandLineResult.HasOption(LaunchOptions.GamePath))
         {
             gameFolder = commandLineResult.GetValueForOption(LaunchOptions.GamePath);
-            gameBinaryPath = $"{gameFolder}/{BinaryName}";
+            gameBinaryPath = $"{gameFolder}/{binaryName}";
         }
         else if (!File.Exists(gameBinaryPath))
         {
             // Also support game installations without branch sub folders.
             gameFolder = currentFolder;
-            gameBinaryPath = $"{gameFolder}/{BinaryName}";
+            gameBinaryPath = $"{gameFolder}/{binaryName}";
         }
 
-        if (!File.Exists(gameBinaryPath) || !MajorGameVersion.Contains(GetVersionValueFromClient(gameBinaryPath).Major))
+        if (!File.Exists(gameBinaryPath) || !majorGameVersion.Contains(GetVersionValueFromClient(gameBinaryPath).Major))
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"[Error] No {gameVersion} client found.");
@@ -67,11 +67,11 @@ static class Launcher
 
         var gameClientBuild = GetVersionValueFromClient(gameBinaryPath).Build;
 
-        if (gameClientBuild < MinGameBuild && gameClientBuild != 0)
+        if (gameClientBuild < minGameBuild && gameClientBuild != 0)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Your found client version {gameClientBuild} is not supported.");
-            Console.WriteLine($"The minimum required build is {MinGameBuild}");
+            Console.WriteLine($"The minimum required build is {minGameBuild}");
 
             return string.Empty;
         }
@@ -119,22 +119,25 @@ static class Launcher
         {
             try
             {
-                var tcpClient = new TcpClient(portal.HostName, portal.Port);
-                var sslStream = new SslStream(tcpClient.GetStream(), false,
-                    (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) =>
+                using var tcpClient = new TcpClient(portal.HostName, portal.Port);
+                
+                // Cancel after 5 seconds.
+                tcpClient.ReceiveTimeout = 5000;
+                tcpClient.SendTimeout = 5000;
+                
+                using var sslStream = new SslStream(tcpClient.GetStream(), false,
+                    (_, _, _, sslPolicyErrors) =>
                     {
-                        if (sslPolicyErrors == SslPolicyErrors.None)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Certificate for server '{portal.HostName}' successfully validated.");
-                            Console.WriteLine();
-                            Console.ResetColor();
-
-                            return true;
-                        }
-
                         // Redirect to the trusted cert warning.
-                        throw new AuthenticationException();
+                        if (sslPolicyErrors != SslPolicyErrors.None)
+                            throw new AuthenticationException();
+                        
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"Certificate for server '{portal.HostName}' successfully validated.");
+                        Console.WriteLine();
+                        Console.ResetColor();
+
+                        return true;
                     },
                     null
                 );
@@ -272,13 +275,11 @@ static class Launcher
 
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
-                    var antiCrash = false;
-
                     // Enable anti crash in dev mode, custom file mode or static auth seed mode.
 #if CUSTOM_FILES
-                    antiCrash = true;
+                    var antiCrash = true;
 #else
-                    antiCrash = legacyCertMode || commandLineResult.HasOption(LaunchOptions.UseStaticAuthSeed) ||
+                    var antiCrash = legacyCertMode || commandLineResult.HasOption(LaunchOptions.UseStaticAuthSeed) ||
                                 commandLineResult.GetValueForOption(LaunchOptions.DevMode) && LaunchOptions.IsDevModeAllowed;
 #endif
 

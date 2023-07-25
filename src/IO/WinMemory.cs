@@ -10,16 +10,16 @@ class WinMemory
 {
     public byte[] Data { get; set; }
 
-    public nint ProcessHandle { get; }
     public nint BaseAddress { get; }
 
-    ProcessBasicInformation peb;
-
-    readonly Dictionary<string, (long Address, byte[] Data)> patchList;
+    ProcessBasicInformation _peb;
+    
+    readonly nint _processHandle;
+    readonly Dictionary<string, (long Address, byte[] Data)> _patchList;
 
     public WinMemory(ProcessInformation processInformation, long binaryLength)
     {
-        ProcessHandle = processInformation.ProcessHandle;
+        _processHandle = processInformation.ProcessHandle;
 
         if (processInformation.ProcessHandle == 0)
             throw new InvalidOperationException("No valid process found.");
@@ -31,7 +31,7 @@ class WinMemory
 
         Data = Read(BaseAddress, (int)binaryLength);
 
-        patchList = new();
+        _patchList = new Dictionary<string, (long Address, byte[] Data)>();
     }
 
     public void RefreshMemoryData(int size)
@@ -53,7 +53,7 @@ class WinMemory
         {
             var buffer = new byte[8];
 
-            if (ReadProcessMemory(ProcessHandle, address, buffer, buffer.Length, out var dummy))
+            if (ReadProcessMemory(_processHandle, address, buffer, buffer.Length, out var dummy))
                 return buffer.ToNint();
 
         }
@@ -73,7 +73,7 @@ class WinMemory
         {
             var buffer = new byte[size];
 
-            if (ReadProcessMemory(ProcessHandle, address, buffer, size, out var dummy))
+            if (ReadProcessMemory(_processHandle, address, buffer, size, out var dummy))
                 return buffer;
 
         }
@@ -87,10 +87,10 @@ class WinMemory
 
     public byte[] Read(long address, int size) => Read((nint)address, size);
 
-    public int ReadDataLength(nint address, string seperator)
+    public int ReadDataLength(nint address, string separator)
     {
         var length = 0L;
-        var seperatorBytes = Encoding.UTF8.GetBytes(seperator).Select(b => (short)b).ToArray();
+        var seperatorBytes = Encoding.UTF8.GetBytes(separator).Select(b => (short)b).ToArray();
         var dataLength = 1000;
 
         // Read in batches here.
@@ -112,12 +112,12 @@ class WinMemory
     {
         try
         {
-            VirtualProtectEx(ProcessHandle, address, (uint)data.Length, (uint)newProtection, out var oldProtect);
+            VirtualProtectEx(_processHandle, address, (uint)data.Length, (uint)newProtection, out var oldProtect);
 
-            WriteProcessMemory(ProcessHandle, address, data, data.Length, out var written);
+            WriteProcessMemory(_processHandle, address, data, data.Length, out _);
 
-            FlushInstructionCache(ProcessHandle, address, (uint)data.Length);
-            VirtualProtectEx(ProcessHandle, address, (uint)data.Length, oldProtect, out oldProtect);
+            FlushInstructionCache(_processHandle, address, (uint)data.Length);
+            VirtualProtectEx(_processHandle, address, (uint)data.Length, oldProtect, out oldProtect);
 
         }
         catch (Exception ex)
@@ -174,7 +174,7 @@ class WinMemory
         {
             Console.WriteLine($"[{patchName}] Adding...");
 
-            patchList[patchName] = (patchOffset, patch);
+            _patchList[patchName] = (patchOffset, patch);
 
             Console.Write($"[{patchName}]");
             Console.ForegroundColor = ConsoleColor.Green;
@@ -183,7 +183,7 @@ class WinMemory
             Console.WriteLine();
         }
         else
-            patchList[patchName] = (patchOffset, patch);
+            _patchList[patchName] = (patchOffset, patch);
 
         return Task.CompletedTask;
     }
@@ -209,10 +209,10 @@ class WinMemory
         return QueuePatch(patchOffset + offsetBase, patch, patchName, printInfo);
     }
 
-    public bool RemapAndPatch(nint viewAddress, int viewSize)
+    bool RemapAndPatch(nint viewAddress, int viewSize)
     {
         // Suspend before remapping to prevent crashes.
-        NtSuspendProcess(ProcessHandle);
+        NtSuspendProcess(_processHandle);
 
         Data = Read(viewAddress, viewSize);
 
@@ -224,13 +224,13 @@ class WinMemory
             try
             {
                 if (NtCreateSection(ref newViewHandle, 0xF001F, 0, ref maxSize, 0x40u, 0x8000000 | 0x400000, 0) == NtStatus.Success &&
-                    NtUnmapViewOfSection(ProcessHandle, viewAddress) == NtStatus.Success)
+                    NtUnmapViewOfSection(_processHandle, viewAddress) == NtStatus.Success)
                 {
                     var viewBase = viewAddress;
 
                     // Map the view with original protections.
-                    var result = NtMapViewOfSection(newViewHandle, ProcessHandle, ref viewBase, 0, (ulong)viewSize, out var viewOffset,
-                                           out var newViewSize, 2, 0, (int)MemProtection.ExecuteRead);
+                    var result = NtMapViewOfSection(newViewHandle, _processHandle, ref viewBase, 0, (ulong)viewSize, out _,
+                                                    out _, 2, 0, (int)MemProtection.ExecuteRead);
 
                     if (result == NtStatus.Success)
                     {
@@ -240,23 +240,24 @@ class WinMemory
                         nint viewBase2 = 0;
 
                         // Create a writable view to write our patches through to preserve the original protections.
-                        result = NtMapViewOfSection(newViewHandle, ProcessHandle, ref viewBase2, 0, (uint)viewSize, out var viewOffset2,
-                                               out var newViewSize2, 2, 0, (int)MemProtection.ReadWrite);
+                        result = NtMapViewOfSection(newViewHandle, _processHandle, ref viewBase2, 0, (uint)viewSize, out _,
+                                                    out _, 2, 0, (int)MemProtection.ReadWrite);
 
                         if (result == NtStatus.Success)
                         {
                             // Write our patched data trough the writable view to the memory.
-                            if (WriteProcessMemory(ProcessHandle, viewBase2, Data, viewSize, out var dummy))
+                            if (WriteProcessMemory(_processHandle, viewBase2, Data, viewSize, out var dummy))
                             {
                                 // Unmap them writeable view, it's not longer needed.
-                                NtUnmapViewOfSection(ProcessHandle, viewBase2);
+                                NtUnmapViewOfSection(_processHandle, viewBase2);
 
                                 // Check if the allocation protections is the right one.
-                                if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0 && mbi.AllocationProtect == MemProtection.ExecuteRead)
+                                if (VirtualQueryEx(_processHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0 
+                                    && mbi.AllocationProtect == MemProtection.ExecuteRead)
                                 {
                                     // Also check if we can change the page protection.
-                                    if (!VirtualProtectEx(ProcessHandle, BaseAddress, 0x4000, (uint)MemProtection.ReadWrite, out var oldProtect))
-                                        NtResumeProcess(ProcessHandle);
+                                    if (!VirtualProtectEx(_processHandle, BaseAddress, 0x4000, (uint)MemProtection.ReadWrite, out _))
+                                        NtResumeProcess(_processHandle);
 
                                     return true;
                                 }
@@ -275,14 +276,14 @@ class WinMemory
         else
             Console.WriteLine("Error while creating the view backup.");
 
-        NtResumeProcess(ProcessHandle);
+        NtResumeProcess(_processHandle);
 
         return false;
     }
 
     void ApplyPatches(bool remap)
     {
-        foreach (var p in patchList)
+        foreach (var p in _patchList)
         {
             var address = p.Value.Address;
 
@@ -297,7 +298,7 @@ class WinMemory
                 if (address < BaseAddress)
                     address += BaseAddress;
 
-                Write(address, patch, MemProtection.ReadWrite);
+                Write(address, patch);
 
                 continue;
             }
@@ -314,11 +315,11 @@ class WinMemory
     {
         if (!remap)
         {
-            ApplyPatches(remap);
+            ApplyPatches(false);
             return true;
         }
 
-        if (VirtualQueryEx(ProcessHandle, BaseAddress, out MemoryBasicInformation mbi, MemoryBasicInformation.Size) != 0)
+        if (VirtualQueryEx(_processHandle, BaseAddress, out var mbi, MemoryBasicInformation.Size) != 0)
             return RemapAndPatch(mbi.BaseAddress, (int)mbi.RegionSize);
 
         return false;
@@ -329,8 +330,8 @@ class WinMemory
     {
         try
         {
-            if (NtQueryInformationProcess(processHandle, 0, ref peb, ProcessBasicInformation.Size, out int sizeInfoReturned) == NtStatus.Success)
-                return Read(peb.PebBaseAddress + 0x10);
+            if (NtQueryInformationProcess(processHandle, 0, ref _peb, ProcessBasicInformation.Size, out _) == NtStatus.Success)
+                return Read(_peb.PebBaseAddress + 0x10);
         }
         catch (Exception ex)
         {

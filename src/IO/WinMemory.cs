@@ -114,7 +114,7 @@ class WinMemory
         {
             VirtualProtectEx(_processHandle, address, (uint)data.Length, (uint)newProtection, out var oldProtect);
 
-            WriteProcessMemory(_processHandle, address, data, data.Length, out _);
+            WriteProcessMemory(_processHandle, address, data, data.Length, out var written);
 
             FlushInstructionCache(_processHandle, address, (uint)data.Length);
             VirtualProtectEx(_processHandle, address, (uint)data.Length, oldProtect, out oldProtect);
@@ -229,8 +229,8 @@ class WinMemory
                     var viewBase = viewAddress;
 
                     // Map the view with original protections.
-                    var result = NtMapViewOfSection(newViewHandle, _processHandle, ref viewBase, 0, (ulong)viewSize, out _,
-                                                    out _, 2, 0, (int)MemProtection.ExecuteRead);
+                    var result = NtMapViewOfSection(newViewHandle, _processHandle, ref viewBase, 0, (ulong)viewSize, out var viewOffset,
+                                           out var newViewSize, 2, 0, (int)MemProtection.ExecuteRead);
 
                     if (result == NtStatus.Success)
                     {
@@ -240,8 +240,8 @@ class WinMemory
                         nint viewBase2 = 0;
 
                         // Create a writable view to write our patches through to preserve the original protections.
-                        result = NtMapViewOfSection(newViewHandle, _processHandle, ref viewBase2, 0, (uint)viewSize, out _,
-                                                    out _, 2, 0, (int)MemProtection.ReadWrite);
+                        result = NtMapViewOfSection(newViewHandle, _processHandle, ref viewBase2, 0, (uint)viewSize, out var viewOffset2,
+                                               out var newViewSize2, 2, 0, (int)MemProtection.ReadWrite);
 
                         if (result == NtStatus.Success)
                         {
@@ -256,7 +256,7 @@ class WinMemory
                                     && mbi.AllocationProtect == MemProtection.ExecuteRead)
                                 {
                                     // Also check if we can change the page protection.
-                                    if (!VirtualProtectEx(_processHandle, BaseAddress, 0x4000, (uint)MemProtection.ReadWrite, out _))
+                                    if (!VirtualProtectEx(_processHandle, BaseAddress, 0x4000, (uint)MemProtection.ReadWrite, out var oldProtect))
                                         NtResumeProcess(_processHandle);
 
                                     return true;

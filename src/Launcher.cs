@@ -14,7 +14,7 @@ static class Launcher
 {
     public static readonly CancellationTokenSource CancellationTokenSource = new();
 
-    public static string PrepareGameLaunch(ParseResult commandLineResult, IPFilter ipFilter)
+    public static async ValueTask<string> PrepareGameLaunch(ParseResult commandLineResult, IPFilter ipFilter)
     {
         var gameVersion = commandLineResult.GetValueForOption(LaunchOptions.Version);
         var (subFolder, binaryName, majorGameVersion, minGameBuild) = gameVersion switch
@@ -112,6 +112,7 @@ static class Launcher
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine($"Developer mode: {(devModeEnabled ? "Enabled" : "Disabled")}");
         Console.WriteLine();
+        Console.WriteLine($"Client Portal '{portal.HostName}'");
         Console.ForegroundColor = ConsoleColor.Gray;
 
         // Check for valid certificate when dev mode is disabled.
@@ -119,11 +120,10 @@ static class Launcher
         {
             try
             {
-                using var tcpClient = new TcpClient(portal.HostName, portal.Port);
+                using var tcpClient = new TcpClient();
+                using var tcpClientTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 
-                // Cancel after 5 seconds.
-                tcpClient.ReceiveTimeout = 5000;
-                tcpClient.SendTimeout = 5000;
+                await tcpClient.ConnectAsync(portal.HostName, portal.Port, tcpClientTimeout.Token);
                 
                 using var sslStream = new SslStream(tcpClient.GetStream(), false,
                     (_, _, _, sslPolicyErrors) =>
@@ -144,7 +144,7 @@ static class Launcher
 
                 sslStream.AuthenticateAsClient(portal.HostName);
             }
-            catch (SocketException)
+            catch (Exception exception) when (exception is SocketException or OperationCanceledException)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"{portal.HostName}:{portal.Port} is offline.");

@@ -12,12 +12,12 @@ if (!Process.GetCurrentProcess().ProcessName.Contains("arctium", StringCompariso
 
 PrintHeader("WoW Client Launcher");
 
-LaunchOptions.RootCommand.SetHandler(context =>
+LaunchOptions.RootCommand.SetHandler(async context =>
 {
     CreateDevIPFilter(out var ipFilter);
 
     // Prefer / instead of \ for the client path.
-    var appPath = Launcher.PrepareGameLaunch(context.ParseResult, ipFilter).Replace("\\", "/");
+    var appPath = (await Launcher.PrepareGameLaunch(context.ParseResult, ipFilter)).Replace("\\", "/");
     var gameCommandLine = string.Join(" ", context.ParseResult.UnmatchedTokens);
 
     // Add config parameter to the game command line.

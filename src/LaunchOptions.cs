@@ -15,11 +15,12 @@ static class LaunchOptions
     public static Option<string> GameBinary = new("--binary");
     public static Option<bool> KeepCache = new("--keepcache", () => true);
     public static Option<bool> UseStaticAuthSeed = new("--staticseed");
-    public static Option<bool> DevMode = new("--dev", () => true);
+    public static Option<bool> DevMode = new("--dev", () => true, "Required for local development without valid certificates.");
     public static Option<string> VersionUrl = new("--versionurl");
     public static Option<string> CdnsUrl = new("--cdnsurl");
     public static Option<string> ProductName = new("--product", () => "wow");
     public static Option<string> CdnRegion = new("--region", () => "EU");
+    public static Option<bool> SkipConnectionPatching = new("--skip", () => false, "Allows connection to servers that come with already patched clients.");
 
     // Game command line options.
     public static Option<string> GameConfig = new("-config", () => "Config.wtf");
@@ -44,7 +45,8 @@ static class LaunchOptions
         CdnsUrl,
         ProductName,
         CdnRegion,
-        GameConfig
+        GameConfig,
+        SkipConnectionPatching
     };
 
     static Command ConfigureCommandLine(Command rootCommand)

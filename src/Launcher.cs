@@ -246,7 +246,7 @@ static class Launcher
                     var modulusOffset = memory.Data.FindPattern(Patterns.Common.SignatureModulus);
                     var legacyCertMode = clientVersion is (1, >= 14, <= 3, _) or (3, 4, <= 1, _) or (9, _, _, _) or (10, <= 1, < 5, _);
 
-                    if (commandLineResult.GetValueForOption(LaunchOptions.SkipConnectionPatching))
+                    if (!commandLineResult.GetValueForOption(LaunchOptions.SkipConnectionPatching))
                     {
                         if (legacyCertMode)
                         {
@@ -287,23 +287,23 @@ static class Launcher
                     WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData, antiCrash);
 
 #if x64
-                    if (commandLineResult.GetValueForOption(LaunchOptions.SkipConnectionPatching))
+                    if (!commandLineResult.GetValueForOption(LaunchOptions.SkipConnectionPatching))
                     {
                         if (legacyCertMode)
                         {
                             Task.WaitAll(new[]
                             {
-                            memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle"),
-                            memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
-                        }, CancellationTokenSource.Token);
+                                memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.CertBundle, "CertBundle"),
+                                memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
+                            }, CancellationTokenSource.Token);
                         }
                         else if (LaunchOptions.IsDevModeAllowed && commandLineResult.GetValueForOption(LaunchOptions.DevMode))
                         {
                             Task.WaitAll(new[]
                             {
-                            memory.QueuePatch(Patterns.Windows.CertChain, Patches.Windows.CertChain, "CertChain"),
-                            memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
-                        }, CancellationTokenSource.Token);
+                                memory.QueuePatch(Patterns.Windows.CertChain, Patches.Windows.CertChain, "CertChain"),
+                                memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 5)
+                            }, CancellationTokenSource.Token);
                         }
                     }
 

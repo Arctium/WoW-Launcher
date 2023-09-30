@@ -4,7 +4,7 @@
         <AssemblyName>Arctium WoW Launcher</AssemblyName>
         <ApplicationIcon>logo.ico</ApplicationIcon>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
         <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>False</AppendRuntimeIdentifierToOutputPath>
@@ -13,7 +13,8 @@
         <AssemblyVersion>10.0.0.0</AssemblyVersion>
         <FileVersion>10.0.0.0</FileVersion>
         <Copyright>Arctium</Copyright>
-        <Platforms>x64;ARM64</Platforms>
+        <Platforms>x64</Platforms>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <ImplicitUsings>enable</ImplicitUsings>
         <DefineConstants>$(DefineConstants);$(Platform)</DefineConstants>
         <Configurations>Debug;Release;ReleaseSilentMode;ReleaseCustomFiles;ReleaseCustomFilesSilentMode</Configurations>
@@ -32,14 +33,6 @@
         <IlcTrimMetadata>true</IlcTrimMetadata>
         <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
         <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Platform)'=='x64'">
-        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Platform)'=='ARM64'">
-        <RuntimeIdentifier>win-arm64</RuntimeIdentifier>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -72,7 +65,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.*" />
         <PackageReference Include="System.CommandLine" Version="2.0.0-*" />
     </ItemGroup>
 </Project>

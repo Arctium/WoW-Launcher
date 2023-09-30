@@ -19,15 +19,9 @@ static class Launcher
         var gameVersion = commandLineResult.GetValueForOption(LaunchOptions.Version);
         var (subFolder, binaryName, majorGameVersion, minGameBuild) = gameVersion switch
         {
-#if x64
             GameVersion.Retail => ("_retail_", "Wow.exe", new[] { 9, 10 }, 37862),
             GameVersion.Classic => ("_classic_", "WowClassic.exe", new[] { 2, 3 }, 39926),
             GameVersion.ClassicEra => ("_classic_era_", "WowClassic.exe", new[] { 1 }, 40347),
-#elif ARM64
-            GameVersion.Retail => ("_retail_", "Wow-ARM64.exe", new[] { 9, 10 }, 37862),
-            GameVersion.Classic => ("_classic_", "WowClassic-arm64.exe", new[] { 2, 3 }, 39926),
-            GameVersion.ClassicEra => ("_classic_era_", "WowClassic-arm64.exe", new[] { 1 }, 40347),
-#endif
             _ => throw new NotImplementedException("Invalid game version specified."),
         };
 
@@ -286,7 +280,6 @@ static class Launcher
 
                     WaitForUnpack(ref processInfo, memory, ref mbi, gameAppData, antiCrash);
 
-#if x64
                     if (!commandLineResult.GetValueForOption(LaunchOptions.SkipConnectionPatching))
                     {
                         if (legacyCertMode)
@@ -342,14 +335,6 @@ static class Launcher
                     }
 #endif
 
-#elif ARM64
-                    Task.WaitAll(new[]
-                    {
-                        memory.QueuePatch(Patterns.Windows.CertBundle, Patches.Windows.Branch, "CertBundle", 19),
-                        memory.QueuePatch(Patterns.Windows.CertCommonName, Patches.Windows.CertCommonName, "CertCommonName", 6),
-                    }, CancellationTokenSource.Token);
-#endif
-
                     NativeWindows.NtResumeProcess(processInfo.ProcessHandle);
 
                     if (memory.RemapAndPatch(antiCrash))
@@ -399,7 +384,6 @@ static class Launcher
 
     static long GenerateAuthSeedFunctionPatch(WinMemory memory, long modulusOffset)
     {
-#if x64
         var authSeedLoadOffset = memory.Data.FindPattern(Patterns.Windows.AuthSeed);
 
         if (authSeedLoadOffset == 0)
@@ -416,14 +400,10 @@ static class Launcher
         Unsafe.WriteUnaligned(ref Patches.Windows.AuthSeed[3], (uint)(modulusOffset - authSeedFunctionOffset - 7));
 
         return authSeedFunctionOffset;
-#else
-        throw new NotImplementedException();
-#endif
     }
 
     static void WaitForUnpack(ref ProcessInformation processInfo, WinMemory memory, ref MemoryBasicInformation mbi, Stream gameAppData, bool antiCrash)
     {
-#if x64
         // Wait for client initialization.
         var initOffset = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize)?.FindPattern(Patterns.Windows.Init) ?? 0;
 
@@ -439,23 +419,7 @@ static class Launcher
         while (memory.Read(initOffset + memory.BaseAddress, 1)?[0] == null ||
                memory.Read(initOffset + memory.BaseAddress, 1)?[0] == 0)
             memory.Data = memory.Read(mbi.BaseAddress, (int)mbi.RegionSize);
-#else
-        // Get PE header info for client initialization.
-        var peHeaders = new PEHeaders(gameAppData);
 
-        SectionHeader textSectionHeader = peHeaders.SectionHeaders.Single(sectionHeader => sectionHeader.Name.ToLower() == ".text");
-
-        gameAppData.Position = textSectionHeader.VirtualSize + textSectionHeader.PointerToRawData;
-
-        var textSectionEndValue = gameAppData.ReadByte();
-
-        Console.WriteLine("Waiting for client initialization...");
-
-        var virtualTextSectionEnd = memory.BaseAddress + textSectionHeader.VirtualAddress + textSectionHeader.VirtualSize;
-
-        while (memory?.Read(virtualTextSectionEnd, 1)?[0] == null || memory?.Read(virtualTextSectionEnd, 1)?[0] == textSectionEndValue)
-            Thread.Sleep(100);
-#endif
         if (antiCrash)
             PrepareAntiCrash(memory, ref mbi, ref processInfo);
 

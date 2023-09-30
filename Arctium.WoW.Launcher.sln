@@ -7,36 +7,21 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arctium.WoW.Launcher", "src
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
-		Release|ARM64 = Release|ARM64
 		Release|x64 = Release|x64
-		ReleaseCustomFiles|ARM64 = ReleaseCustomFiles|ARM64
 		ReleaseCustomFiles|x64 = ReleaseCustomFiles|x64
-		ReleaseCustomFilesSilentMode|ARM64 = ReleaseCustomFilesSilentMode|ARM64
 		ReleaseCustomFilesSilentMode|x64 = ReleaseCustomFilesSilentMode|x64
-		ReleaseSilentMode|ARM64 = ReleaseSilentMode|ARM64
 		ReleaseSilentMode|x64 = ReleaseSilentMode|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Debug|ARM64.Build.0 = Debug|ARM64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Debug|x64.ActiveCfg = Debug|x64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Debug|x64.Build.0 = Debug|x64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Release|ARM64.ActiveCfg = Release|ARM64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Release|ARM64.Build.0 = Release|ARM64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Release|x64.ActiveCfg = Release|x64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.Release|x64.Build.0 = Release|x64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFiles|ARM64.ActiveCfg = ReleaseCustomFiles|ARM64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFiles|ARM64.Build.0 = ReleaseCustomFiles|ARM64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFiles|x64.ActiveCfg = ReleaseCustomFiles|x64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFiles|x64.Build.0 = ReleaseCustomFiles|x64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFilesSilentMode|ARM64.ActiveCfg = ReleaseCustomFilesSilentMode|ARM64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFilesSilentMode|ARM64.Build.0 = ReleaseCustomFilesSilentMode|ARM64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFilesSilentMode|x64.ActiveCfg = ReleaseCustomFilesSilentMode|x64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseCustomFilesSilentMode|x64.Build.0 = ReleaseCustomFilesSilentMode|x64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseSilentMode|ARM64.ActiveCfg = ReleaseSilentMode|ARM64
-		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseSilentMode|ARM64.Build.0 = ReleaseSilentMode|ARM64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseSilentMode|x64.ActiveCfg = ReleaseSilentMode|x64
 		{661B173A-D445-4706-9FF2-C0408ED62FA2}.ReleaseSilentMode|x64.Build.0 = ReleaseSilentMode|x64
 	EndGlobalSection

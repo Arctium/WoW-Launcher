@@ -1,5 +1,7 @@
 # THE FUTURE OF THIS LAUNCHER
 
+Binary releases [HERE](https://arctium.io/wow/)
+
 As of today (2023-09-30) this project goes closed source and is not longer be MIT licensed.
 
 This does not affect the license of already published sources.
